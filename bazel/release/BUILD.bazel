@@ -1,0 +1,64 @@
+load(":dist.bzl", "dnf5_distribution")
+
+# Relocatable dnf5 distribution for the target platform:
+#
+#   dnf5/bin/dnf5                     launcher (dnf5.sh)
+#   dnf5/libexec/dnf5                 dnf5 executable
+#   dnf5/lib/                         libdnf5, libdnf5-cli, libdnf5-deps
+#   dnf5/lib/dnf5/plugins/            dnf5 command plugins
+#   dnf5/lib/libdnf5/plugins/         libdnf5 plugins
+#   dnf5/lib/rpm/                     rpm configuration (RPM_CONFIGDIR)
+#   dnf5/etc/dnf/                     dnf.conf and libdnf5 plugin configuration
+#   dnf5/share/dnf5/aliases.d/        command aliases
+#   dnf5/share/licenses/dnf5/         licenses
+#
+# Build with e.g. `bazel build //bazel/release:dnf5 --config=linux_arm64`.
+DNF5_PLUGINS = [
+    "builddep_cmd_plugin",
+    "changelog_cmd_plugin",
+    "config-manager_cmd_plugin",
+    "copr_cmd_plugin",
+    "manifest_cmd_plugin",
+    "repoclosure_cmd_plugin",
+    "repomanage_cmd_plugin",
+    "reposync_cmd_plugin",
+]
+
+LIBDNF5_PLUGINS = [
+    "actions",
+    "expired-pgp-keys",
+    "local_plugin",
+]
+
+dnf5_distribution(
+    name = "dnf5",
+    executables = [
+        "dnf5",
+        "dnf5.sh",
+        "sysusers.sh",
+    ],
+    prefix = "dnf5",
+    renames = {"dnf5.sh": "dnf5"},
+    srcs = {
+        ":dnf5.sh": "bin",
+        "@dnf5//:dnf5": "libexec",
+        "@dnf5//:libdnf5": "lib",
+        "@dnf5//:libdnf5-cli": "lib",
+        "@dnf5//:libdnf5-deps": "lib",
+        "@rpm//:configdir": "lib/rpm",
+        "@rpm//:scripts/sysusers.sh": "lib/rpm",
+        "@dnf5//:dnf_conf": "etc/dnf",
+        "@dnf5//:libdnf5-plugins/actions/actions.conf": "etc/dnf/libdnf5-plugins",
+        "@dnf5//:libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.conf": "etc/dnf/libdnf5-plugins",
+        "@dnf5//:libdnf5-plugins/local/local.conf": "etc/dnf/libdnf5-plugins",
+        "@dnf5//:aliases": "share/dnf5/aliases.d",
+        "@dnf5//:licenses": "share/licenses/dnf5",
+    } | {
+        "@dnf5//:" + p: "lib/dnf5/plugins"
+        for p in DNF5_PLUGINS
+    } | {
+        "@dnf5//:" + p: "lib/libdnf5/plugins"
+        for p in LIBDNF5_PLUGINS
+    },
+    visibility = ["//visibility:public"],
+)

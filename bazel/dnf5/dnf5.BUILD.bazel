@@ -105,6 +105,29 @@ INC_DNF5 = INC_GLOBAL + [
 
 INC_DNF5_PLUGIN = INC_GLOBAL + ["-I" + ROOT + "/dnf5/include"]
 
+# --- Install layout -------------------------------------------------------------
+
+# Run paths for the relocatable distribution (//bazel/release): the binary is
+# installed in libexec/, shared libraries in lib/ and plugins in
+# lib/{dnf5,libdnf5}/plugins/. Bazel adds its own run paths for running from
+# bazel-bin.
+RPATH_BIN = select({
+    MACOS: ["-Wl,-rpath,@loader_path/../lib"],
+    "//conditions:default": ["-Wl,-rpath,$$ORIGIN/../lib"],
+})
+
+# cc_shared_library.user_link_flags are not subject to make variable
+# expansion, unlike cc_binary.linkopts: a single "$" here.
+RPATH_LIB = select({
+    MACOS: ["-Wl,-rpath,@loader_path"],
+    "//conditions:default": ["-Wl,-rpath,$ORIGIN"],
+})
+
+RPATH_PLUGIN = select({
+    MACOS: ["-Wl,-rpath,@loader_path/../.."],
+    "//conditions:default": ["-Wl,-rpath,$ORIGIN/../.."],
+})
+
 # --- Headers -------------------------------------------------------------------
 
 # Public headers (include/libdnf5, include/libdnf5-cli) plus every private
@@ -223,6 +246,7 @@ cc_shared_library(
         MACOS: "libdnf5-deps.dylib",
         "//conditions:default": "libdnf5-deps.so",
     }),
+    user_link_flags = RPATH_LIB,
     deps = THIRD_PARTY,
 )
 
@@ -276,6 +300,7 @@ cc_shared_library(
         MACOS: "libdnf5.2.dylib",
         "//conditions:default": "libdnf5.so.2",
     }),
+    user_link_flags = RPATH_LIB,
     deps = [":libdnf5_obj"],
 )
 
@@ -311,6 +336,7 @@ cc_shared_library(
         MACOS: "libdnf5-cli.3.dylib",
         "//conditions:default": "libdnf5-cli.so.3",
     }),
+    user_link_flags = RPATH_LIB,
     deps = [":libdnf5_cli_obj"],
 )
 
@@ -327,7 +353,7 @@ cc_binary(
         ":libdnf5-deps",
     ],
     # ENABLE_EXPORTS: dnf5 plugins resolve symbols from the executable.
-    linkopts = select({
+    linkopts = RPATH_BIN + select({
         MACOS: ["-Wl,-export_dynamic"],
         "//conditions:default": [
             "-Wl,--export-dynamic",
@@ -406,7 +432,7 @@ DNF5_PLUGINS = {
             ":libdnf5-deps",
         ],
         shared_lib_name = name + ".so",
-        user_link_flags = DNF5_PLUGIN_LINKOPTS,
+        user_link_flags = DNF5_PLUGIN_LINKOPTS + RPATH_PLUGIN,
         deps = [name + "_obj"],
     )
     for name in DNF5_PLUGINS
@@ -449,7 +475,38 @@ LIBDNF5_PLUGINS = {
             ":libdnf5-deps",
         ],
         shared_lib_name = output + ".so",
+        user_link_flags = RPATH_PLUGIN,
         deps = [name + "_obj"],
     )
     for name, (_, _, output, _) in LIBDNF5_PLUGINS.items()
 ]
+
+# --- Data installed with the distribution (//bazel/release) ---------------------
+
+# /etc/dnf/dnf.conf
+filegroup(
+    name = "dnf_conf",
+    srcs = ["dnf5/config/etc/dnf/dnf.conf"],
+)
+
+# /usr/share/dnf5/aliases.d
+filegroup(
+    name = "aliases",
+    srcs = glob(["dnf5/config/usr/share/dnf5/aliases.d/*.conf"]),
+)
+
+# /etc/dnf/libdnf5-plugins: configuration of the libdnf5 plugins built above.
+exports_files([
+    "libdnf5-plugins/actions/actions.conf",
+    "libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.conf",
+    "libdnf5-plugins/local/local.conf",
+])
+
+filegroup(
+    name = "licenses",
+    srcs = [
+        "COPYING.md",
+        "gpl-2.0.txt",
+        "lgpl-2.1.txt",
+    ],
+)
