@@ -9,3 +9,7 @@ release_notes.md
 release_assets/
 /AGENTS.local.md
 
+
+# Patches applied to third-party/upstream sources are part of the build
+# (overrides global ignore rules such as *.patch).
+!*.patch

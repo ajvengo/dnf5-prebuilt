@@ -1,0 +1,13 @@
+{
+    "integrity": "sha256-ZN4leFNOLUYHkFC6edTBpGLXqizeAeYZ7PmbcITlgEQ=",
+    "overlay": {
+        "BUILD.bazel": "sha256-ZGDyxdVieXEOfqQc26cT6MYn2W6qiuUNMF9QUjkycGs=",
+        "MODULE.bazel": "sha256-Yh3sbknDjjPK5UpA/yJDyAyhOphDr6xzOy3+C3q1b+Y="
+    },
+    "patch_strip": 1,
+    "patches": {
+        "0001-default-to-crypto-rust-backend.patch": "sha256-CUIldTNthNZ7wmFTDrO5CJgjdwfQytf+BsXsZWjTvJE="
+    },
+    "strip_prefix": "rpm-sequoia-1.10.3",
+    "url": "https://github.com/rpm-software-management/rpm-sequoia/archive/refs/tags/v1.10.3.tar.gz"
+}

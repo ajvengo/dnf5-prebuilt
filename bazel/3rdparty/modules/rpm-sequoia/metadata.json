@@ -1,0 +1,11 @@
+{
+    "homepage": "https://github.com/rpm-software-management/rpm-sequoia",
+    "maintainers": [],
+    "repository": [
+        "github:rpm-software-management/rpm-sequoia"
+    ],
+    "versions": [
+        "1.10.3"
+    ],
+    "yanked_versions": {}
+}

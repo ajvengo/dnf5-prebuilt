@@ -20,6 +20,26 @@ register_toolchains(
     dev_dependency = True,
 )
 
+# Hermetic Rust toolchain (rpm-sequoia) via rules_rs, linking with the LLVM
+# toolchain above.
+bazel_dep(name = "rules_rs", version = "0.1.3", dev_dependency = True)
+
+rust_toolchains = use_extension(
+    "@rules_rs//rs/toolchains:module_extension.bzl",
+    "toolchains",
+    dev_dependency = True,
+)
+rust_toolchains.toolchain(
+    edition = "2021",
+    version = "1.92.0",
+)
+use_repo(rust_toolchains, "default_rust_toolchains")
+
+register_toolchains(
+    "@default_rust_toolchains//...",
+    dev_dependency = True,
+)
+
 # Remote Execution Platform setup from BCR
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4", dev_dependency = True)
 
@@ -40,3 +60,4 @@ bazel_dep(name = "toml11", version = "4.4.0", dev_dependency = True)
 bazel_dep(name = "json-c", version = "0.19", dev_dependency = True)
 bazel_dep(name = "libacl", version = "2.4.0", dev_dependency = True)
 bazel_dep(name = "libsmartcols", version = "2.42.4", dev_dependency = True)
+bazel_dep(name = "rpm-sequoia", version = "1.10.3", dev_dependency = True)

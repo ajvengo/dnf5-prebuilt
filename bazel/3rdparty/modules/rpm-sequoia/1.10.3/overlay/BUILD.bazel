@@ -1,0 +1,43 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_rs//rs:rust_static_library.bzl", "rust_static_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # LGPL-2.0-or-later
+
+exports_files(["LICENSE.txt"])
+
+# Upstream builds a cdylib (librpm_sequoia.so). Here the crate is built as a
+# static library and linked into librpmio, so the final artifacts do not need
+# to ship a separate Rust shared object. build.rs only renders the .pc file
+# and is not needed.
+rust_static_library(
+    name = "rpm_sequoia_staticlib",
+    srcs = glob(["src/**/*.rs"]),
+    compile_data = glob(["src/**"], exclude = ["src/**/*.rs"]),
+    crate_features = ["crypto-rust"],
+    crate_name = "rpm_sequoia",
+    crate_root = "src/lib.rs",
+    edition = "2021",
+    rustc_env = {
+        "CARGO_PKG_NAME": "rpm-sequoia",
+        "CARGO_PKG_VERSION": "1.10.3",
+        "CARGO_PKG_DESCRIPTION": "An implementation of the RPM PGP interface using Sequoia.",
+        "CARGO_PKG_HOMEPAGE": "https://sequoia-pgp.org/",
+    },
+    visibility = ["//visibility:private"],
+    deps = [
+        "@rpm_sequoia_crates//:anyhow",
+        "@rpm_sequoia_crates//:chrono",
+        "@rpm_sequoia_crates//:lazy_static",
+        "@rpm_sequoia_crates//:libc",
+        "@rpm_sequoia_crates//:sequoia-openpgp",
+        "@rpm_sequoia_crates//:sequoia-policy-config",
+        "@rpm_sequoia_crates//:thiserror",
+    ],
+)
+
+cc_library(
+    name = "rpm-sequoia",
+    deps = [":rpm_sequoia_staticlib"],
+)
