@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-gVv+Z5KqEaE6EzuG5/D0Xtxdcet49ftmhsScf3krkEk=",
+    "overlay": {
+        "BUILD.bazel": "sha256-qCZd5b3W8+EkvIhDw+PxG1Q+0c4ESw+lSzVr98jSyXs=",
+        "MODULE.bazel": "sha256-Ghj8/PdR7j+h4N60mSc3BJu/+LeClSlzzFuZZE8ysM8="
+    },
+    "strip_prefix": "toml11-4.4.0",
+    "url": "https://github.com/ToruNiina/toml11/archive/refs/tags/v4.4.0.tar.gz"
+}

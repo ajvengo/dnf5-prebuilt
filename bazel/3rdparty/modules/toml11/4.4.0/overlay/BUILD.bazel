@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])
+
+exports_files(["LICENSE"])
+
+# Header-only build (TOML11_COMPILE_SOURCES undefined), matching the
+# toml11-devel package that dnf5's CMake build consumes.
+cc_library(
+    name = "toml11",
+    hdrs = glob([
+        "include/toml.hpp",
+        "include/toml_fwd.hpp",
+        "include/toml11/**/*.hpp",
+    ]),
+    includes = ["include"],
+)

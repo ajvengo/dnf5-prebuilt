@@ -32,3 +32,8 @@ buildbuddy.platform(
     container_image = "docker://gcr.io/flame-public/rbe-ubuntu24-04@sha256:be9853fc45092d2cf2bda3abed30d22182881659a50bf35c7125161d7cfc8a75",
 )
 use_repo(buildbuddy, "buildbuddy_toolchain")
+
+# Dependencies used to build dnf5 from source. Modules not available in the
+# BCR live in the local registry under bazel/3rdparty. All of them are dev-only:
+# consumers of the dnf5-prebuilt ruleset download prebuilt binaries instead.
+bazel_dep(name = "toml11", version = "4.4.0", dev_dependency = True)
