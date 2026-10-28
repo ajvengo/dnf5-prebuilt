@@ -1,0 +1,11 @@
+{
+    "homepage": "https://github.com/util-linux/util-linux",
+    "maintainers": [],
+    "repository": [
+        "github:util-linux/util-linux"
+    ],
+    "versions": [
+        "2.42.4"
+    ],
+    "yanked_versions": {}
+}

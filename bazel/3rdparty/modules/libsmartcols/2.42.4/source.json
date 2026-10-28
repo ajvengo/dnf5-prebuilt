@@ -1,0 +1,11 @@
+{
+    "integrity": "sha256-+9YqEAq3u4dGugZhJVw8SBhbHpAhUHxiTaAfvGljMOw=",
+    "overlay": {
+        "BUILD.bazel": "sha256-LdCq6Tlz9MaWRe2Z5LdBdqQ5FjY+Os6qD3lMQkBhd/s=",
+        "MODULE.bazel": "sha256-r/+ksfapNnacYguKEW0K9GJODO67VIQ4s9K8msNFkGo=",
+        "bazel/config.h": "sha256-5Fv13jC037ZUpYAD/ySuRx7HuW39QMMjxuuB6XmGv8w=",
+        "bazel/libsmartcols.h": "sha256-/NVGL5DsyKfWPi1FVLxx5vYMwDsqlzUa6SEgoErQ3Z4="
+    },
+    "strip_prefix": "util-linux-2.42.4",
+    "url": "https://www.kernel.org/pub/linux/utils/util-linux/v2.42/util-linux-2.42.4.tar.xz"
+}

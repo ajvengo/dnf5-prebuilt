@@ -1,0 +1,10 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+# Link/run smoke tests for the libraries in the local registry
+# (bazel/3rdparty). They must build for every platform in //bazel.
+
+cc_test(
+    name = "smartcols_test",
+    srcs = ["smartcols_test.c"],
+    deps = ["@libsmartcols//:smartcols"],
+)
