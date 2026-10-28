@@ -41,3 +41,10 @@ cc_test(
     linkstatic = True,
     deps = ["@librepo"],
 )
+
+cc_test(
+    name = "modulemd_test",
+    srcs = ["modulemd_test.c"],
+    linkstatic = True,
+    deps = ["@libmodulemd//:modulemd"],
+)

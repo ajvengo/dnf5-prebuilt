@@ -1,0 +1,66 @@
+load("@glib//gobject:gobject.bzl", "mkenums")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//:bazel_defs.bzl", "repo_path")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])  # MIT
+
+exports_files(["COPYING"])
+
+# libmodulemd without GObject introspection, docs, Python bindings or the
+# modulemd-validator tool; rpmio is used to decompress YAML streams.
+
+PUBLIC_HDRS = glob(["modulemd/include/modulemd-2.0/*.h"])
+
+# gnome.mkenums_simple('modulemd-enums', sources : modulemd_hdrs)
+mkenums(
+    name = "modulemd_enums_h",
+    srcs = PUBLIC_HDRS,
+    out = "modulemd/include/modulemd-2.0/modulemd-enums.h",
+    template = "bazel/modulemd-enums.h.template",
+)
+
+mkenums(
+    name = "modulemd_enums_c",
+    srcs = PUBLIC_HDRS,
+    out = "modulemd/modulemd-enums.c",
+    template = "bazel/modulemd-enums.c.template",
+)
+
+cc_library(
+    name = "private_headers",
+    hdrs = glob(["modulemd/include/private/*.h"]) + ["bazel/config.h"],
+    includes = ["modulemd/include"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "modulemd",
+    srcs = glob(
+        ["modulemd/modulemd*.c"],
+        exclude = ["modulemd/modulemd-validator.c"],
+    ) + ["modulemd/modulemd-enums.c"],
+    hdrs = PUBLIC_HDRS + ["modulemd/include/modulemd-2.0/modulemd-enums.h"],
+    conlyopts = ["-std=gnu11"],
+    # config.h is passed with -iquote so it wins over dependencies that export
+    # their own config.h.
+    copts = [
+        "-iquote",
+        repo_path("bazel"),
+    ],
+    implementation_deps = [":private_headers"],
+    # pkg-config: -I${includedir}/modulemd-2.0
+    includes = ["modulemd/include/modulemd-2.0"],
+    local_defines = [
+        "_GNU_SOURCE",
+        "G_LOG_USE_STRUCTURED",
+        'G_LOG_DOMAIN=\\"libmodulemd\\"',
+    ],
+    deps = [
+        "@glib//glib",
+        "@glib//gobject",
+        "@libyaml",
+        "@rpm",
+    ],
+)

@@ -1,0 +1,11 @@
+{
+    "homepage": "https://github.com/fedora-modularity/libmodulemd",
+    "maintainers": [],
+    "repository": [
+        "github:fedora-modularity/libmodulemd"
+    ],
+    "versions": [
+        "2.15.3"
+    ],
+    "yanked_versions": {}
+}
