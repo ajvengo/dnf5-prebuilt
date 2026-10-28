@@ -6,3 +6,19 @@ sh_test(
     data = ["@dnf5-prebuilt//dnf5-prebuilt:current_toolchain"],
     env = {"DNF5": "$(rootpath @dnf5-prebuilt//dnf5-prebuilt:current_toolchain)"},
 )
+
+# The README example: $(DNF5) in a genrule.
+genrule(
+    name = "dnf5_version",
+    outs = ["dnf5_version.txt"],
+    cmd = "$(DNF5) --version > $@",
+    toolchains = ["@dnf5-prebuilt//dnf5-prebuilt:current_toolchain"],
+    tools = ["@dnf5-prebuilt//dnf5-prebuilt:current_toolchain"],
+)
+
+sh_test(
+    name = "genrule_test",
+    srcs = ["genrule_test.sh"],
+    data = [":dnf5_version"],
+    env = {"VERSION_FILE": "$(rootpath :dnf5_version)"},
+)
