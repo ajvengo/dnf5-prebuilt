@@ -1,0 +1,11 @@
+{
+    "homepage": "https://github.com/json-c/json-c",
+    "maintainers": [],
+    "repository": [
+        "github:json-c/json-c"
+    ],
+    "versions": [
+        "0.19"
+    ],
+    "yanked_versions": {}
+}

@@ -1,0 +1,12 @@
+{
+    "integrity": "sha256-8XptfSZc+EDf2PD0amBtmMa1sm3Hz+JyddFUaiEwhsg=",
+    "overlay": {
+        "BUILD.bazel": "sha256-daLyO9PY3ARm8vFmkD0xMbLQQUDLy9DY1HotsM5WbCY=",
+        "MODULE.bazel": "sha256-iMc71gMuqEL3BfZ4oP6O1K5WQFkv/O86r+lwVNETsLc=",
+        "config.h": "sha256-AUFhsvIu8hVUncKKz7+I3lablIo9wVhrbmj/lLxgeXo=",
+        "json.h": "sha256-BUCAefnWLb7DxOvCwFur3A9wzxMP29o5yVM3gFo1jyU=",
+        "json_config.h": "sha256-lixBajxaca0cj5vzV0OxGBw8oUjLsCsKqVlbXSW0KWc="
+    },
+    "strip_prefix": "json-c-json-c-0.19-20260627",
+    "url": "https://github.com/json-c/json-c/archive/refs/tags/json-c-0.19-20260627.tar.gz"
+}

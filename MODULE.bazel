@@ -37,3 +37,4 @@ use_repo(buildbuddy, "buildbuddy_toolchain")
 # BCR live in the local registry under bazel/3rdparty. All of them are dev-only:
 # consumers of the dnf5-prebuilt ruleset download prebuilt binaries instead.
 bazel_dep(name = "toml11", version = "4.4.0", dev_dependency = True)
+bazel_dep(name = "json-c", version = "0.19", dev_dependency = True)
