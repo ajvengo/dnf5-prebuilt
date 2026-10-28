@@ -30,7 +30,7 @@ jobs:
         if: env.BUILDBUDDY_ENDPOINT != '' && env.BUILDBUDDY_API_KEY != ''
         run: |
           {
-            echo "common --config=buildbuddy"
+            echo "common --config=buildbuddy-rbe"
             echo "common:buildbuddy --bes_backend=grpcs://${BUILDBUDDY_ENDPOINT}"
             echo "common:buildbuddy --bes_results_url=https://${BUILDBUDDY_ENDPOINT}/invocation/"
             echo "common:buildbuddy --remote_cache=grpcs://${BUILDBUDDY_ENDPOINT}"
