@@ -1,0 +1,55 @@
+# Builds the dnf5 distribution archive of every supported platform.
+# Reused by ci.yaml and release.yml.
+name: Build
+
+on:
+  workflow_call:
+    secrets:
+      BUILDBUDDY_API_KEY:
+        required: false
+
+jobs:
+  build:
+    name: build (${{ matrix.platform }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every platform is cross-compiled with the hermetic LLVM toolchain.
+        platform: [linux_amd64, linux_arm64, osx_amd64, osx_arm64]
+    env:
+      BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          bazelisk-cache: true
+          repository-cache: true
+          disk-cache: ${{ env.BUILDBUDDY_API_KEY == '' && matrix.platform || false }}
+      - name: Configure remote cache
+        if: env.BUILDBUDDY_API_KEY != ''
+        run: |
+          {
+            echo "common --config=buildbuddy"
+            echo "common --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}"
+          } > .bazelrc.user
+      - name: Build
+        run: >
+          bazel --bazelrc=.github/workflows/ci.bazelrc build
+          --config=${{ matrix.platform }} -c opt
+          //bazel/release:dnf5 //bazel/tests/...
+      - name: Test
+        if: matrix.platform == 'linux_amd64'
+        run: >
+          bazel --bazelrc=.github/workflows/ci.bazelrc test
+          --config=${{ matrix.platform }} -c opt //bazel/tests/...
+      - name: Stage archive
+        run: |
+          version=$(sed -n 's/^DNF5_VERSION = "\(.*\)"/\1/p' bazel/extensions.bzl)
+          mkdir -p dist
+          cp -L bazel-bin/bazel/release/dnf5.tar.gz "dist/dnf5-${version}-${{ matrix.platform }}.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dnf5-${{ matrix.platform }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
