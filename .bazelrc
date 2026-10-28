@@ -8,6 +8,7 @@ common --deleted_packages=e2e/smoke_test
 common --registry=file://%workspace%/bazel/3rdparty
 common --registry=https://bcr.bazel.build
 common --experimental_repo_remote_exec
+common --downloader_config=bazel/downloader.cfg
 
 # Bzlmod settings
 common --enable_bzlmod
