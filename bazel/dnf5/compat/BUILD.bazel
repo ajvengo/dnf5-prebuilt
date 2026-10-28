@@ -1,0 +1,17 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# Compatibility headers for building @dnf5 on macOS: a no-op <libintl.h>
+# (dnf5 is built without translations), a stub <sys/auxv.h> and
+# dnf5_macos_compat.h, which the dnf5 overlay force-includes to provide
+# pipe2(), renameat2() and unshare().
+cc_library(
+    name = "macos",
+    hdrs = [
+        "dnf5_macos_compat.h",
+        "libintl.h",
+        "sys/auxv.h",
+    ],
+    includes = ["."],
+    target_compatible_with = ["@platforms//os:macos"],
+    visibility = ["@dnf5//:__subpackages__"],
+)

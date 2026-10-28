@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: dnf5-prebuilt <dnf5-prebuilt@users.noreply.github.com>
+Date: Wed, 28 Oct 2026 14:30:00 +0100
+Subject: [PATCH] Disambiguate includes that depend on the include search order
+
+libdnf5/utils/fs/utils.hpp includes the public header of the same relative
+path; use <> so it cannot resolve to itself when the source root is on the
+quote include path (as with Bazel). config_main.cpp includes the generated
+config.h like the other users do (conf/config.h), so it cannot pick up an
+unrelated config.h.
+---
+ libdnf5/conf/config_main.cpp | 2 +-
+ libdnf5/utils/fs/utils.hpp   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libdnf5/conf/config_main.cpp b/libdnf5/conf/config_main.cpp
+index 2d808ec..af47e4d 100644
+--- a/libdnf5/conf/config_main.cpp
++++ b/libdnf5/conf/config_main.cpp
+@@ -19,7 +19,7 @@
+ 
+ #include "libdnf5/conf/config_main.hpp"
+ 
+-#include "config.h"
++#include "conf/config.h"
+ #include "config_utils.hpp"
+ #include "utils/deprecate.hpp"
+ #include "utils/system.hpp"
+diff --git a/libdnf5/utils/fs/utils.hpp b/libdnf5/utils/fs/utils.hpp
+index 0aedf3a..2f3c0e2 100644
+--- a/libdnf5/utils/fs/utils.hpp
++++ b/libdnf5/utils/fs/utils.hpp
+@@ -20,7 +20,7 @@
+ #ifndef LIBDNF5_UTILS_FS_UTILS_PRIVATE_HPP
+ #define LIBDNF5_UTILS_FS_UTILS_PRIVATE_HPP
+ 
+-#include "libdnf5/utils/fs/utils.hpp"
++#include <libdnf5/utils/fs/utils.hpp>
+ 
+ 
+ namespace libdnf5::utils::fs {

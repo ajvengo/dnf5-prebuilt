@@ -1,0 +1,62 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: dnf5-prebuilt <dnf5-prebuilt@users.noreply.github.com>
+Date: Wed, 28 Oct 2026 14:30:00 +0100
+Subject: [PATCH] Include the standard headers that are used
+
+Fixes the build with libc++, which does not provide these declarations
+through other standard headers the way libstdc++ does.
+---
+ include/libdnf5/common/exception.hpp    | 1 +
+ include/libdnf5/common/set.hpp          | 1 +
+ libdnf5/conf/config_utils.cpp           | 1 +
+ libdnf5/logger/memory_buffer_logger.cpp | 1 +
+ 4 files changed, 4 insertions(+)
+
+diff --git a/include/libdnf5/common/exception.hpp b/include/libdnf5/common/exception.hpp
+index 97713f5..42d34db 100644
+--- a/include/libdnf5/common/exception.hpp
++++ b/include/libdnf5/common/exception.hpp
+@@ -29,6 +29,7 @@
+ 
+ #include <filesystem>
+ #include <functional>
++#include <exception>
+ #include <stdexcept>
+ #include <type_traits>
+ 
+diff --git a/include/libdnf5/common/set.hpp b/include/libdnf5/common/set.hpp
+index 861d1eb..a1eb08b 100644
+--- a/include/libdnf5/common/set.hpp
++++ b/include/libdnf5/common/set.hpp
+@@ -21,6 +21,7 @@
+ #define LIBDNF5_COMMON_SET_HPP
+ 
+ #include <algorithm>
++#include <iterator>
+ #include <set>
+ 
+ 
+diff --git a/libdnf5/conf/config_utils.cpp b/libdnf5/conf/config_utils.cpp
+index 4442831..dae3ea0 100644
+--- a/libdnf5/conf/config_utils.cpp
++++ b/libdnf5/conf/config_utils.cpp
+@@ -24,6 +24,7 @@
+ #include <glob.h>
+ 
+ #include <cstring>
++#include <sstream>
+ 
+ 
+ namespace libdnf5 {
+diff --git a/libdnf5/logger/memory_buffer_logger.cpp b/libdnf5/logger/memory_buffer_logger.cpp
+index 85bf707..89307e9 100644
+--- a/libdnf5/logger/memory_buffer_logger.cpp
++++ b/libdnf5/logger/memory_buffer_logger.cpp
+@@ -20,6 +20,7 @@
+ #include "libdnf5/logger/memory_buffer_logger.hpp"
+ 
+ #include <mutex>
++#include <vector>
+ 
+ namespace libdnf5 {
+ 

@@ -58,6 +58,9 @@ test:rbe --remote_default_exec_properties=network=bridge
 # Target platform configurations (see //bazel:BUILD.bazel)
 build:linux_amd64 --platforms=//bazel:linux_amd64
 build:linux_arm64 --platforms=//bazel:linux_arm64
+# OpenSSL 4.0 aarch64 assembly (poly1305 SVE2) is not position independent and
+# cannot be linked into shared objects.
+build:linux_arm64 --@openssl//:use-no-asm-fallback
 build:osx_amd64 --platforms=//bazel:osx_amd64
 build:osx_arm64 --platforms=//bazel:osx_arm64
 

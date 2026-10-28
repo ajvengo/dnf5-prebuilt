@@ -1,0 +1,458 @@
+# Bazel build for the upstream dnf5 sources (applied as the root BUILD file of
+# @dnf5 by //bazel:extensions.bzl%dnf5_extension).
+#
+# Mirrors the upstream CMake build configured with:
+#   -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr
+#   -DCMAKE_INSTALL_LIBDIR=lib64
+#   -DWITH_DNF5DAEMON_CLIENT=OFF -DWITH_DNF5DAEMON_SERVER=OFF
+#   -DWITH_PLUGIN_APPSTREAM=OFF -DWITH_PLUGIN_RHSM=OFF
+#   -DWITH_PYTHON_PLUGINS_LOADER=OFF -DWITH_PLUGIN_SYSTEMD_INHIBIT=OFF
+#   -DWITH_SYSTEMD=OFF -DWITH_HTML=OFF -DWITH_MAN=OFF -DWITH_TRANSLATIONS=OFF
+#   -DWITH_TESTS=OFF -DWITH_PERL5=OFF -DWITH_PYTHON3=OFF -DWITH_RUBY=OFF
+#   -DWITH_GO=OFF
+# (WITH_ACL, WITH_MODULEMD, WITH_COMPS and WITH_PLUGIN_MANIFEST stay ON; ACL
+# support is Linux-only). The automatic and needs-restarting dnf5 plugins
+# require sdbus-c++/systemd and are not built. Parity with that CMake build is
+# tracked with any2bazel (see //:any2bazel.json).
+
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_shared_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # GPL-2.0-or-later (dnf5), LGPL-2.1-or-later (libdnf5*)
+
+exports_files([
+    "COPYING.md",
+    "gpl-2.0.txt",
+    "lgpl-2.1.txt",
+])
+
+# Execroot-relative path of this repository, used to reproduce CMake's ordered
+# include_directories() with explicit -I flags.
+ROOT = "external/" + repository_name()[1:]
+
+LINUX = "@platforms//os:linux"
+
+MACOS = "@platforms//os:macos"
+
+# --- Flags shared by every target (top-level CMakeLists.txt) ------------------
+
+DEFINES = [
+    "PROJECT_VERSION_PRIME=5",
+    "PROJECT_VERSION_MAJOR=4",
+    "PROJECT_VERSION_MINOR=6",
+    "PROJECT_VERSION_MICRO=0",
+    "LIBSOLV_FLAG_FOCUSNEW=1",
+    "WITH_MODULEMD",
+]
+
+WARNINGS = [
+    "-Wall",
+    "-Wextra",
+    "-Wcast-align",
+    "-Wformat-nonliteral",
+    "-Wmissing-format-attribute",
+    "-Wredundant-decls",
+    "-Wsign-compare",
+    "-Wsign-conversion",
+    "-Wtype-limits",
+    "-Wuninitialized",
+    "-Wwrite-strings",
+    "-Wodr",
+    "-Wconversion",
+]
+
+COPTS = WARNINGS + [
+    "-fvisibility=hidden",
+    "-fmacro-prefix-map=%s/=" % ROOT,
+] + select({
+    # See //bazel/dnf5/compat.
+    MACOS: [
+        "-include",
+        "dnf5_macos_compat.h",
+    ],
+    "//conditions:default": [],
+})
+
+CXXOPTS = [
+    "-std=gnu++20",
+    "-fvisibility-inlines-hidden",
+]
+
+
+# include_directories() in CMake order: include/, common/ and then the
+# component's own directory. Generated headers live under $(BINDIR).
+INC_GLOBAL = [
+    "-I" + ROOT + "/include",
+    "-I" + ROOT + "/common",
+]
+
+INC_LIBDNF5 = INC_GLOBAL + [
+    "-I" + ROOT + "/libdnf5",
+    "-I$(BINDIR)/" + ROOT + "/libdnf5",
+    # libdnf5/conf/config_main.cpp includes the generated "config.h".
+    "-iquote",
+    "$(BINDIR)/" + ROOT + "/libdnf5/conf",
+]
+
+INC_LIBDNF5_CLI = INC_GLOBAL + ["-I" + ROOT + "/libdnf5-cli"]
+
+INC_DNF5 = INC_GLOBAL + [
+    "-I" + ROOT + "/dnf5/include",
+    "-I" + ROOT + "/dnf5",
+]
+
+INC_DNF5_PLUGIN = INC_GLOBAL + ["-I" + ROOT + "/dnf5/include"]
+
+# --- Headers -------------------------------------------------------------------
+
+# Public headers (include/libdnf5, include/libdnf5-cli) plus every private
+# header of the tree. Include paths are passed explicitly (INC_*), so this
+# target only makes the files available to the compile actions.
+cc_library(
+    name = "headers",
+    hdrs = glob(
+        [
+            "include/**/*.hpp",
+            "include/**/*.h",
+            "common/**/*.hpp",
+            "common/**/*.h",
+            "libdnf5/**/*.hpp",
+            "libdnf5/**/*.h",
+            "libdnf5-cli/**/*.hpp",
+            "libdnf5-cli/**/*.h",
+            "dnf5/**/*.hpp",
+            "dnf5/**/*.h",
+            "dnf5-plugins/**/*.hpp",
+            "dnf5-plugins/**/*.h",
+            "libdnf5-plugins/**/*.hpp",
+            "libdnf5-plugins/**/*.h",
+        ],
+        allow_empty = True,
+    ) + [":config_h"],
+    deps = select({
+        # Linux-only headers and APIs (gettext, <sys/auxv.h>, pipe2, ...).
+        MACOS: ["@dnf5-prebuilt//bazel/dnf5/compat:macos"],
+        "//conditions:default": [],
+    }),
+    # SQL schema #included by libdnf5/transaction/db/db.cpp.
+    textual_hdrs = glob(["libdnf5/**/*.sql"]),
+    visibility = ["//visibility:private"],
+)
+
+# libdnf5/config.h.in -> libdnf5/conf/config.h (configure_file in
+# libdnf5/CMakeLists.txt). rpmteSetVfyLevel exists in rpm >= 4.15.
+expand_template(
+    name = "config_h",
+    out = "libdnf5/conf/config.h",
+    substitutions = {
+        "@CMAKE_INSTALL_PREFIX@": "/usr",
+        "@CMAKE_INSTALL_FULL_LIBDIR@": "/usr/lib64",
+        "#cmakedefine HAVE_RPMTE_SETVFYLEVEL @HAVE_RPMTE_SETVFYLEVEL@": "#define HAVE_RPMTE_SETVFYLEVEL 1",
+    },
+    template = "libdnf5/config.h.in",
+)
+
+# --- common_obj ----------------------------------------------------------------
+
+# CMake links the common_obj object library into every component; separate
+# cc_library targets keep cc_shared_library from treating it as a library
+# shared between libdnf5.so and the other shared objects.
+# Like upstream's GLOB_RECURSE(*.cpp *.c); there are currently no C sources.
+COMMON_SRCS = glob(
+    [
+        "common/**/*.cpp",
+        "common/**/*.c",
+    ],
+    allow_empty = True,
+)
+
+[
+    cc_library(
+        name = "common_" + consumer,
+        srcs = COMMON_SRCS,
+        copts = COPTS + INC_GLOBAL + ["-I" + ROOT + "/common"],
+        cxxopts = CXXOPTS,
+        local_defines = DEFINES,
+        visibility = ["//visibility:private"],
+        deps = [
+            ":headers",
+            "@fmt",
+        ],
+    )
+    for consumer in [
+        "libdnf5",
+        "libdnf5_cli",
+        "dnf5",
+        "plugins",
+    ]
+]
+
+# --- Third-party libraries ------------------------------------------------------
+
+# Upstream links its dependencies as separate system shared libraries
+# (librpm.so, libsolv.so, libfmt.so, ...). Here they are statically linked into
+# one shared object that libdnf5, libdnf5-cli, dnf5 and the plugins link
+# against, so each library exists once in the process (cc_shared_library also
+# refuses to link the same static library into several shared objects).
+THIRD_PARTY = [
+    "@curl",
+    "@fmt",
+    "@glib//glib",
+    "@json-c",
+    "@libmodulemd//:modulemd",
+    "@libpkgmanifest",
+    "@librepo",
+    "@libsmartcols//:smartcols",
+    "@libsolv//:libsolv",
+    "@libsolv//:libsolvext",
+    "@libxml2",
+    "@rpm",
+    "@rpm//:librpmbuild",
+    "@sqlite3",
+    "@zlib",
+] + select({
+    LINUX: ["@libacl//:acl"],
+    "//conditions:default": [],
+})
+
+cc_shared_library(
+    name = "libdnf5-deps",
+    shared_lib_name = select({
+        MACOS: "libdnf5-deps.dylib",
+        "//conditions:default": "libdnf5-deps.so",
+    }),
+    deps = THIRD_PARTY,
+)
+
+# --- libdnf5 -------------------------------------------------------------------
+
+cc_library(
+    name = "libdnf5_obj",
+    srcs = glob([
+        "libdnf5/**/*.cpp",
+        "libdnf5/**/*.c",
+    ]),
+    copts = COPTS + INC_LIBDNF5,
+    cxxopts = CXXOPTS,
+    linkopts = select({
+        LINUX: ["-ldl"],
+        "//conditions:default": [],
+    }),
+    local_defines = DEFINES + [
+        "LIBDNF_BUILD_LIBRARY",
+        'GETTEXT_DOMAIN=\\"libdnf5\\"',
+        "LIBSOLV_SOLVABLE_PREPEND_DEP",
+    ] + select({
+        LINUX: ["HAVE_LIBACL"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:private"],
+    deps = [
+        ":common_libdnf5",
+        ":headers",
+        "@fmt",
+        "@glib//glib",
+        "@json-c",
+        "@libmodulemd//:modulemd",
+        "@librepo",
+        "@libsolv//:libsolv",
+        "@libsolv//:libsolvext",
+        "@libxml2",
+        "@rpm",
+        "@sqlite3",
+        "@toml11",
+    ] + select({
+        LINUX: ["@libacl//:acl"],
+        "//conditions:default": [],
+    }),
+)
+
+cc_shared_library(
+    name = "libdnf5",
+    dynamic_deps = [":libdnf5-deps"],
+    shared_lib_name = select({
+        MACOS: "libdnf5.2.dylib",
+        "//conditions:default": "libdnf5.so.2",
+    }),
+    deps = [":libdnf5_obj"],
+)
+
+# --- libdnf5-cli ---------------------------------------------------------------
+
+cc_library(
+    name = "libdnf5_cli_obj",
+    srcs = glob(["libdnf5-cli/**/*.cpp"]),
+    copts = COPTS + INC_LIBDNF5_CLI,
+    cxxopts = CXXOPTS,
+    local_defines = DEFINES + [
+        "LIBDNF_CLI_BUILD_LIBRARY",
+        'GETTEXT_DOMAIN=\\"libdnf5-cli\\"',
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":common_libdnf5_cli",
+        ":headers",
+        ":libdnf5_obj",
+        "@fmt",
+        "@json-c",
+        "@libsmartcols//:smartcols",
+    ],
+)
+
+cc_shared_library(
+    name = "libdnf5-cli",
+    dynamic_deps = [
+        ":libdnf5",
+        ":libdnf5-deps",
+    ],
+    shared_lib_name = select({
+        MACOS: "libdnf5-cli.3.dylib",
+        "//conditions:default": "libdnf5-cli.so.3",
+    }),
+    deps = [":libdnf5_cli_obj"],
+)
+
+# --- dnf5 ----------------------------------------------------------------------
+
+cc_library(
+    name = "dnf5_obj",
+    srcs = glob(["dnf5/**/*.cpp"]),
+    copts = COPTS + INC_DNF5,
+    cxxopts = CXXOPTS,
+    local_defines = DEFINES + [
+        "DNF_BUILD_APPLICATION",
+        'GETTEXT_DOMAIN=\\"dnf5\\"',
+        'LIBDIR=\\"/usr/lib64\\"',
+        'INSTALL_PREFIX=\\"/usr\\"',
+        'SYSCONFIG_DIR=\\"/etc\\"',
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":common_dnf5",
+        ":headers",
+        ":libdnf5_cli_obj",
+        ":libdnf5_obj",
+        "@rpm",
+        "@toml11",
+    ],
+)
+
+cc_binary(
+    name = "dnf5",
+    dynamic_deps = [
+        ":libdnf5",
+        ":libdnf5-cli",
+        ":libdnf5-deps",
+    ],
+    # ENABLE_EXPORTS: dnf5 plugins resolve symbols from the executable.
+    linkopts = select({
+        MACOS: ["-Wl,-export_dynamic"],
+        "//conditions:default": ["-rdynamic"],
+    }),
+    deps = [":dnf5_obj"],
+)
+
+# --- Plugins -------------------------------------------------------------------
+
+# dnf5 command plugins use symbols of the dnf5 executable, which are undefined
+# when the plugin is linked (CMAKE_MODULE_LINKER_FLAGS -Wl,-z,undefs).
+DNF5_PLUGIN_LINKOPTS = select({
+    MACOS: [
+        "-undefined",
+        "dynamic_lookup",
+    ],
+    "//conditions:default": ["-Wl,-z,undefs"],
+})
+
+# name -> (directory, gettext domain, extra deps)
+DNF5_PLUGINS = {
+    "builddep_cmd_plugin": ("builddep_plugin", "dnf5-plugin-builddep", ["@rpm//:librpmbuild"]),
+    "changelog_cmd_plugin": ("changelog_plugin", "dnf5-plugin-changelog", []),
+    "config-manager_cmd_plugin": ("config-manager_plugin", "dnf5-plugin-config-manager", [
+        "@curl",
+        "@fmt",
+        "@zlib",
+    ]),
+    "copr_cmd_plugin": ("copr_plugin", "dnf5-plugin-copr", ["@json-c"]),
+    "manifest_cmd_plugin": ("manifest_plugin", "dnf5_cmd_manifest", ["@libpkgmanifest"]),
+    "repoclosure_cmd_plugin": ("repoclosure_plugin", "dnf5-plugin-repoclosure", []),
+    "repomanage_cmd_plugin": ("repomanage_plugin", "dnf5-plugin-repomanage", []),
+    "reposync_cmd_plugin": ("reposync_plugin", "dnf5-plugin-reposync", []),
+}
+
+[
+    cc_library(
+        name = name + "_obj",
+        srcs = glob(["dnf5-plugins/%s/**/*.cpp" % directory]),
+        copts = COPTS + INC_DNF5_PLUGIN,
+        cxxopts = CXXOPTS,
+        local_defines = DEFINES + ['GETTEXT_DOMAIN=\\"%s\\"' % domain],
+        visibility = ["//visibility:private"],
+        deps = [
+            ":common_plugins",
+            ":headers",
+            ":libdnf5_cli_obj",
+            ":libdnf5_obj",
+        ] + extra_deps,
+    )
+    for name, (directory, domain, extra_deps) in DNF5_PLUGINS.items()
+]
+
+[
+    cc_shared_library(
+        name = name,
+        dynamic_deps = [
+            ":libdnf5",
+            ":libdnf5-cli",
+            ":libdnf5-deps",
+        ],
+        shared_lib_name = name + ".so",
+        user_link_flags = DNF5_PLUGIN_LINKOPTS,
+        deps = [name + "_obj"],
+    )
+    for name in DNF5_PLUGINS
+]
+
+# name -> (source, gettext domain, output name, extra deps)
+LIBDNF5_PLUGINS = {
+    "actions": ("libdnf5-plugins/actions/actions.cpp", "libdnf5-plugin-actions", "actions", ["@json-c"]),
+    "expired-pgp-keys": ("libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.cpp", "libdnf5-plugin-expired-pgp-keys", "expired-pgp-keys", ["@rpm"]),
+    "local_plugin": ("libdnf5-plugins/local/local.cpp", "libdnf5-plugin-local", "local", []),
+}
+
+[
+    cc_library(
+        name = name + "_obj",
+        srcs = [src],
+        copts = COPTS + INC_GLOBAL,
+        cxxopts = CXXOPTS,
+        local_defines = DEFINES + ['GETTEXT_DOMAIN=\\"%s\\"' % domain] + (
+            # rpm >= 5.99.90
+            ["HAVE_RPM6"] if name == "expired-pgp-keys" else []
+        ),
+        visibility = ["//visibility:private"],
+        deps = [
+            ":common_plugins",
+            ":headers",
+            ":libdnf5_cli_obj",
+            ":libdnf5_obj",
+        ] + extra_deps,
+    )
+    for name, (src, domain, _, extra_deps) in LIBDNF5_PLUGINS.items()
+]
+
+[
+    cc_shared_library(
+        name = name,
+        dynamic_deps = [
+            ":libdnf5",
+            ":libdnf5-cli",
+            ":libdnf5-deps",
+        ],
+        shared_lib_name = output + ".so",
+        deps = [name + "_obj"],
+    )
+    for name, (_, _, output, _) in LIBDNF5_PLUGINS.items()
+]

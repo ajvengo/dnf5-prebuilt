@@ -94,6 +94,12 @@ use_repo(buildbuddy, "buildbuddy_toolchain")
 # consumers of the dnf5-prebuilt ruleset download prebuilt binaries instead.
 bazel_dep(name = "toml11", version = "4.4.0", dev_dependency = True)
 bazel_dep(name = "curl", version = "8.22.0.bcr.1", dev_dependency = True)
+bazel_dep(name = "fmt", version = "12.2.0.bcr.1", dev_dependency = True)
+bazel_dep(name = "glib", version = "2.84.4", dev_dependency = True)
+bazel_dep(name = "libxml2", version = "2.15.3", dev_dependency = True)
+bazel_dep(name = "openssl", version = "4.0.1.bcr.2", dev_dependency = True)
+bazel_dep(name = "sqlite3", version = "3.53.4", dev_dependency = True)
+bazel_dep(name = "zlib", version = "1.3.2.bcr.3", dev_dependency = True)
 bazel_dep(name = "json-c", version = "0.19", dev_dependency = True)
 bazel_dep(name = "libacl", version = "2.4.0", dev_dependency = True)
 bazel_dep(name = "libmodulemd", version = "2.15.3.dnf5.1", dev_dependency = True)
@@ -104,3 +110,11 @@ bazel_dep(name = "libsmartcols", version = "2.42.4", dev_dependency = True)
 bazel_dep(name = "popt", version = "1.19.dnf5.1", dev_dependency = True)
 bazel_dep(name = "rpm", version = "6.1.0", dev_dependency = True)
 bazel_dep(name = "rpm-sequoia", version = "1.10.3", dev_dependency = True)
+
+# Upstream dnf5 sources with the Bazel overlay from //bazel/dnf5.
+dnf5_extension = use_extension(
+    "//bazel:extensions.bzl",
+    "dnf5_extension",
+    dev_dependency = True,
+)
+use_repo(dnf5_extension, "dnf5")

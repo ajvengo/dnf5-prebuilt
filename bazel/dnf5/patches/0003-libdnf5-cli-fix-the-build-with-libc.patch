@@ -1,0 +1,75 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: dnf5-prebuilt <dnf5-prebuilt@users.noreply.github.com>
+Date: Wed, 28 Oct 2026 14:32:53 +0100
+Subject: [PATCH] libdnf5-cli: fix the build with libc++
+
+- DateOption: libc++ does not implement std::chrono::parse() yet, parse the
+  date with std::get_time() there.
+- ProgressBar: the begin time and speed window are system_clock time points;
+  take the current time from system_clock too. high_resolution_clock is an
+  alias of system_clock in libstdc++ but of steady_clock in libc++.
+- changelogs: include <algorithm> for std::sort.
+---
+ libdnf5-cli/output/changelogs.cpp        |  1 +
+ libdnf5-cli/progressbar/progress_bar.cpp |  2 +-
+ libdnf5-cli/session.cpp                  | 13 +++++++++++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/libdnf5-cli/output/changelogs.cpp b/libdnf5-cli/output/changelogs.cpp
+index 52a13a5..dd0650b 100644
+--- a/libdnf5-cli/output/changelogs.cpp
++++ b/libdnf5-cli/output/changelogs.cpp
+@@ -24,6 +24,7 @@
+ 
+ #include <libdnf5/rpm/package_set.hpp>
+ 
++#include <algorithm>
+ #include <ctime>
+ #include <iomanip>
+ #include <iostream>
+diff --git a/libdnf5-cli/progressbar/progress_bar.cpp b/libdnf5-cli/progressbar/progress_bar.cpp
+index 01d78b0..122b1cd 100644
+--- a/libdnf5-cli/progressbar/progress_bar.cpp
++++ b/libdnf5-cli/progressbar/progress_bar.cpp
+@@ -345,7 +345,7 @@ void ProgressBar::update() {
+             static_cast<int32_t>(static_cast<float>(p_impl->ticks) / static_cast<float>(p_impl->total_ticks) * 100);
+     }
+ 
+-    auto now = std::chrono::high_resolution_clock::now();
++    auto now = std::chrono::system_clock::now();
+ 
+     // compute the current speed (ticks per second)
+     auto delta = now - p_impl->current_speed_window_start;
+diff --git a/libdnf5-cli/session.cpp b/libdnf5-cli/session.cpp
+index b2fa196..0c2ce20 100644
+--- a/libdnf5-cli/session.cpp
++++ b/libdnf5-cli/session.cpp
+@@ -22,6 +22,8 @@
+ #include <libdnf5/utils/bgettext/bgettext-mark-domain.h>
+ 
+ #include <chrono>
++#include <ctime>
++#include <iomanip>
+ #include <limits>
+ #include <sstream>
+ #include <utility>
+@@ -253,8 +255,19 @@ DateOption::DateOption(
+         parser.add_init_value(std::unique_ptr<libdnf5::OptionNumber<std::int64_t>>(
+             new libdnf5::OptionNumber<int64_t>(0, [](const std::string & value) {
+                 std::istringstream ss(value);
++#if defined(_LIBCPP_VERSION)
++                // libc++ does not implement std::chrono::parse() yet.
++                std::tm tm{};
++                ss >> std::get_time(&tm, "%Y-%m-%d");
++                std::chrono::sys_seconds tp{};
++                if (!ss.fail()) {
++                    tp = std::chrono::sys_days{
++                        std::chrono::year{tm.tm_year + 1900} / (tm.tm_mon + 1) / tm.tm_mday};
++                }
++#else
+                 std::chrono::sys_seconds tp;
+                 ss >> std::chrono::parse("%F", tp);
++#endif
+                 if (ss.fail()) {
+                     throw libdnf5::cli::ArgumentParserError(
+                         M_("Invalid date passed: \"{}\". Dates in \"YYYY-MM-DD\" format are expected"), value);

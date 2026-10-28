@@ -1,0 +1,3 @@
+# Bazel overlay for the upstream dnf5 sources, applied by
+# //bazel:extensions.bzl%dnf5_extension.
+exports_files(["dnf5.BUILD.bazel"] + glob(["patches/*.patch"]))

@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: dnf5-prebuilt <dnf5-prebuilt@users.noreply.github.com>
+Date: Wed, 28 Oct 2026 14:46:24 +0100
+Subject: [PATCH] utils: report arm64 Macs as aarch64 in detect_arch()
+
+uname() returns "arm64" on macOS, which is not an RPM architecture.
+---
+ libdnf5/utils/system.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/libdnf5/utils/system.cpp b/libdnf5/utils/system.cpp
+index ecdc57e..1bbec6f 100644
+--- a/libdnf5/utils/system.cpp
++++ b/libdnf5/utils/system.cpp
+@@ -69,6 +69,11 @@ std::string detect_arch() {
+         *modifier++ = endian;
+         *modifier = 0;
+     }
++#ifdef __APPLE__
++    // macOS calls aarch64 "arm64"
++    if (!strcmp(un.machine, "arm64"))
++        strcpy(un.machine, "aarch64");
++#endif
+ #ifdef __MIPSEL__
+     // support for little endian MIPS
+     if (!strcmp(un.machine, "mips"))

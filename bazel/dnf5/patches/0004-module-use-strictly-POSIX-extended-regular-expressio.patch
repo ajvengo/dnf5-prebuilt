@@ -1,0 +1,67 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: dnf5-prebuilt <dnf5-prebuilt@users.noreply.github.com>
+Date: Wed, 28 Oct 2026 14:35:37 +0100
+Subject: [PATCH] module: use strictly POSIX extended regular expressions for
+ NSVCAP forms
+
+The NSVCAP_FORM_REGEX patterns use "\/" and empty "()" groups. Both are
+undefined in POSIX extended regular expressions; libstdc++ accepts them but
+libc++ throws std::regex_error while constructing the static array, which
+aborts every program linking libdnf5. Use "/" and an always-empty "(.{0})"
+group instead, which keeps the submatch numbering.
+---
+ libdnf5/module/nsvcap.cpp | 39 +++++++++++++++++++++------------------
+ 1 file changed, 21 insertions(+), 18 deletions(-)
+
+diff --git a/libdnf5/module/nsvcap.cpp b/libdnf5/module/nsvcap.cpp
+index e07204e..d1003e8 100644
+--- a/libdnf5/module/nsvcap.cpp
++++ b/libdnf5/module/nsvcap.cpp
+@@ -44,26 +44,29 @@ namespace libdnf5::module {
+ #define MODULE_PROFILE MODULE_NAME
+ 
+ 
++// Strictly POSIX extended regular expressions (libc++ rejects the undefined
++// "\/" escape and empty "()" groups): "/" needs no escaping, and "(.{0})" is
++// an always-empty group that keeps the submatch numbering of every form equal.
+ // clang-format off
+ static const std::array<std::regex, 18> NSVCAP_FORM_REGEX{
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT "::?" MODULE_ARCH "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT "::?" MODULE_ARCH "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "()"           "::"  MODULE_ARCH "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "()"           "::"  MODULE_ARCH "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "()"               "()"           "::"  MODULE_ARCH "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "()"               "()"           "::"  MODULE_ARCH "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT       "()"        "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "()"                 "()"        "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT       "()"        "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "()"                 "()"        "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "()"               "()"                 "()"        "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "()"               "()"                 "()"        "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME     "()"              "()"               "()"           "::"  MODULE_ARCH "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME     "()"              "()"               "()"           "::"  MODULE_ARCH "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME     "()"              "()"               "()"                 "()"        "\\/"  MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME     "()"              "()"               "()"                 "()"        "\\/?" "()"           "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "()"           ":" MODULE_CONTEXT       "()"        "\\/?" MODULE_PROFILE "$", std::regex::extended),
+-    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "()"           ":" MODULE_CONTEXT       "()"        "\\/?" "()"           "$", std::regex::extended)};
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT "::?" MODULE_ARCH "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT "::?" MODULE_ARCH "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "(.{0})"           "::"  MODULE_ARCH "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "(.{0})"           "::"  MODULE_ARCH "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "(.{0})"               "(.{0})"           "::"  MODULE_ARCH "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "(.{0})"               "(.{0})"           "::"  MODULE_ARCH "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT       "(.{0})"        "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "(.{0})"                 "(.{0})"        "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION ":" MODULE_CONTEXT       "(.{0})"        "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM ":" MODULE_VERSION     "(.{0})"                 "(.{0})"        "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "(.{0})"               "(.{0})"                 "(.{0})"        "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "(.{0})"               "(.{0})"                 "(.{0})"        "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME     "(.{0})"              "(.{0})"               "(.{0})"           "::"  MODULE_ARCH "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME     "(.{0})"              "(.{0})"               "(.{0})"           "::"  MODULE_ARCH "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME     "(.{0})"              "(.{0})"               "(.{0})"                 "(.{0})"        "/"  MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME     "(.{0})"              "(.{0})"               "(.{0})"                 "(.{0})"        "/?" "(.{0})"           "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "(.{0})"           ":" MODULE_CONTEXT       "(.{0})"        "/?" MODULE_PROFILE "$", std::regex::extended),
++    std::regex("^" MODULE_NAME ":" MODULE_STREAM     "(.{0})"           ":" MODULE_CONTEXT       "(.{0})"        "/?" "(.{0})"           "$", std::regex::extended)};
+ // clang-format on
+ 
+ 

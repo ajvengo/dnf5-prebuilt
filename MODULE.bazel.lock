@@ -82,6 +82,8 @@
     "https://bcr.bazel.build/modules/bzip2/1.0.8.bcr.4/source.json": "a769883197aebe54f78671f1a2c7e0fae5cd8f045bae1230f04f4902856e3bca",
     "https://bcr.bazel.build/modules/curl/8.22.0.bcr.1/MODULE.bazel": "8202950c0110a0c91a932aa1a2eb81cf88cf887e8fca80c185e553a427ff7d1f",
     "https://bcr.bazel.build/modules/curl/8.22.0.bcr.1/source.json": "7a1be417475fd8b2db78527f2eaaf0382ac008fe63601b7c75943ef3ca6d045a",
+    "https://bcr.bazel.build/modules/fmt/12.2.0.bcr.1/MODULE.bazel": "1f391c93affc305e3d32fa24024f132e465fcdeec3d39adfb01e7f3869b993a7",
+    "https://bcr.bazel.build/modules/fmt/12.2.0.bcr.1/source.json": "5a817473cfdd07162adbf555a3cd5c8a798f1f751b87a13a3464dc6d9370b0f3",
     "https://bcr.bazel.build/modules/gawk/5.3.2.bcr.3/MODULE.bazel": "f1b7bb2dd53e8f2ef984b39485ec8a44e9076dda5c4b8efd2fb4c6a6e856a31d",
     "https://bcr.bazel.build/modules/gawk/5.3.2.bcr.3/source.json": "ebe931bfe362e4b41e59ee00a528db6074157ff2ced92eb9e970acab2e1089c9",
     "https://bcr.bazel.build/modules/glib/2.84.4/MODULE.bazel": "bfdd2245722f16eceb5d08a19c8c7c2dffcbdb3161b520b29645dc2a47bdf0dc",
