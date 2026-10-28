@@ -38,6 +38,8 @@ build --@curl//:http_only=false
 build --experimental_remote_cache_chunking
 
 # Bazel RBE configuration profile targeting //bazel:ubuntu24_04_amd64
+# The container image of remote actions can be overridden (e.g. in .bazelrc.user) with
+#   common --repo_env=RBE_CONTAINER_IMAGE=docker://<registry>/<image>@sha256:<digest>
 build:rbe --host_platform=//bazel:ubuntu24_04_amd64
 build:rbe --extra_execution_platforms=//bazel:ubuntu24_04_amd64
 build:rbe --spawn_strategy=remote

@@ -120,6 +120,8 @@ to other ids).
 - RBE (`--config=rbe`, endpoint in `.bazelrc.user`) needs
   `--tls_certificate=/etc/pki/tls/certs/ca-bundle.crt` and
   `--noexperimental_remote_cache_chunking`, and its workers cannot pull the
-  gcr.io image; local builds are the default.
+  gcr.io image; local builds are the default. The image is overridable with
+  `--repo_env=RBE_CONTAINER_IMAGE=docker://...@sha256:...` (`bazel/rbe.bzl`,
+  which generates the parent of `//bazel:ubuntu24_04_amd64`).
 - `bazel/downloader.cfg` adds cdn.kernel.org for kernel.org mirrors that may
   be unreachable.

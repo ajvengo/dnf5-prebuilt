@@ -91,6 +91,14 @@ buildbuddy.platform(
 )
 use_repo(buildbuddy, "buildbuddy_toolchain")
 
+# The image above, unless RBE_CONTAINER_IMAGE is set with --repo_env.
+rbe_container_image = use_repo_rule("//bazel:rbe.bzl", "rbe_container_image")
+
+rbe_container_image(
+    name = "rbe_container_image",
+    dev_dependency = True,
+)
+
 # Dependencies used to build dnf5 from source. Modules not available in the
 # BCR live in the local registry under bazel/3rdparty. All of them are dev-only:
 # consumers of the dnf5-prebuilt ruleset download prebuilt binaries instead.

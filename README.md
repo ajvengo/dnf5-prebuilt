@@ -139,7 +139,12 @@ mkdir -p /tmp/dist && cp -L bazel-bin/bazel/release/dnf5.tar.gz /tmp/dist/dnf5-5
 ```
 
 `--config=rbe` enables remote execution (configure the endpoint and
-credentials in `.bazelrc.user`, which is git-ignored).
+credentials in `.bazelrc.user`, which is git-ignored). Remote actions run in
+the Ubuntu 24.04 image of toolchains_buildbuddy; use another image with
+
+```
+common --repo_env=RBE_CONTAINER_IMAGE=docker://<registry>/<image>@sha256:<digest>
+```
 
 ## Repository layout
 

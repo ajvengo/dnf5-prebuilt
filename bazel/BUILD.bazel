@@ -44,7 +44,9 @@ platform(
 )
 
 # Remote execution platform: Ubuntu 24.04 container image provided by
-# toolchains_buildbuddy. Only the container image is inherited; the
+# toolchains_buildbuddy, overridable with
+# --repo_env=RBE_CONTAINER_IMAGE=docker://<image>@sha256:<digest> (see rbe.bzl).
+# Only the container image is inherited; the
 # BuildBuddy-specific properties are cleared (an empty value drops an inherited
 # key) so the platform also works on other REAPI backends. The C/C++ toolchain
 # is the hermetic LLVM one, not the image's gcc.
@@ -59,5 +61,5 @@ platform(
         "OSFamily": "",
         "dockerNetwork": "",
     },
-    parents = ["@buildbuddy_toolchain//:platform_linux_x86_64"],
+    parents = ["@rbe_container_image//:platform"],
 )
