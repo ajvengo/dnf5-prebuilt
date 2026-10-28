@@ -1,0 +1,13 @@
+{
+    "integrity": "sha256-esOrclKfm79J/Wjfb2bF0Nqq1PN6IlCIZktxDJDxOQU=",
+    "overlay": {
+        "BUILD.bazel": "sha256-Ht/HvZ7t7baglLl2e5GelYUhoSdR46T/rded33YkLzc=",
+        "MODULE.bazel": "sha256-ShYr2HstxJUIFWQ0iR+5y2dMnP4P7LG5kbnCDTKfqj0="
+    },
+    "patch_strip": 1,
+    "patches": {
+        "0001-checksum-macos-st_mtimespec.patch": "sha256-IltMyfyscye9v5W1msCP6pGrijb/SAxIXDDvd0vom88="
+    },
+    "strip_prefix": "librepo-1.21.2",
+    "url": "https://github.com/rpm-software-management/librepo/archive/refs/tags/1.21.2.tar.gz"
+}

@@ -34,3 +34,10 @@ cc_test(
     linkstatic = True,
     deps = ["@libsolv//:libsolvext"],
 )
+
+cc_test(
+    name = "librepo_test",
+    srcs = ["librepo_test.c"],
+    linkstatic = True,
+    deps = ["@librepo"],
+)

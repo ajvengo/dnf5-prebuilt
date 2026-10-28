@@ -1,0 +1,144 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # LGPL-2.1-or-later
+
+exports_files(["COPYING"])
+
+# librepo built with zchunk support and with OpenPGP handled by librpm
+# (USE_GPGME=OFF), so neither GnuPG nor gpgme is needed.
+
+ZCHUNK_TEMPLATES = [
+    "downloadtarget",
+    "handle",
+    "util",
+]
+
+[
+    expand_template(
+        name = name + "_h",
+        out = "librepo/%s.h" % name,
+        substitutions = {"@LIBREPO_ZCHUNK_ENABLED@": "1"},
+        template = "librepo/%s.h.in" % name,
+    )
+    for name in ZCHUNK_TEMPLATES
+]
+
+expand_template(
+    name = "version_h",
+    out = "librepo/version.h",
+    substitutions = {
+        "@LIBREPO_MAJOR@": "1",
+        "@LIBREPO_MINOR@": "21",
+        "@LIBREPO_PATCH@": "2",
+    },
+    template = "librepo/version.h.in",
+)
+
+PUBLIC_HDRS = [
+    "librepo/checksum.h",
+    "librepo/downloader.h",
+    "librepo/fastestmirror.h",
+    "librepo/gpg.h",
+    "librepo/librepo.h",
+    "librepo/lrmirrorlist.h",
+    "librepo/metadata_downloader.h",
+    "librepo/metalink.h",
+    "librepo/mirrorlist.h",
+    "librepo/package_downloader.h",
+    "librepo/rcodes.h",
+    "librepo/repoconf.h",
+    "librepo/repomd.h",
+    "librepo/repoutil_yum.h",
+    "librepo/result.h",
+    "librepo/types.h",
+    "librepo/url_substitution.h",
+    "librepo/xmlparser.h",
+    "librepo/yum.h",
+] + ["librepo/%s.h" % name for name in ZCHUNK_TEMPLATES] + ["librepo/version.h"]
+
+# Installed headers: <librepo/*.h>. Public headers include their siblings by
+# bare name, including the generated ones, so all of them are staged into a
+# single include/librepo/ directory.
+[
+    copy_file(
+        name = "stage_" + hdr.replace("/", "_").replace(".", "_"),
+        src = hdr,
+        out = "include/" + hdr,
+        visibility = ["//visibility:private"],
+    )
+    for hdr in PUBLIC_HDRS
+]
+
+cc_library(
+    name = "public_headers",
+    hdrs = ["include/" + hdr for hdr in PUBLIC_HDRS],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:private"],
+)
+
+# Sources include their siblings (including the generated ones) by bare name.
+cc_library(
+    name = "private_headers",
+    hdrs = PUBLIC_HDRS + glob([
+        "librepo/*_internal.h",
+        "librepo/cleanup.h",
+    ]),
+    includes = ["librepo"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "librepo",
+    srcs = [
+        "librepo/checksum.c",
+        "librepo/downloader.c",
+        "librepo/downloadtarget.c",
+        "librepo/fastestmirror.c",
+        "librepo/gpg.c",
+        "librepo/gpg_rpm.c",
+        "librepo/handle.c",
+        "librepo/lrmirrorlist.c",
+        "librepo/metadata_downloader.c",
+        "librepo/metalink.c",
+        "librepo/mirrorlist.c",
+        "librepo/package_downloader.c",
+        "librepo/rcodes.c",
+        "librepo/repoconf.c",
+        "librepo/repomd.c",
+        "librepo/repoutil_yum.c",
+        "librepo/result.c",
+        "librepo/url_substitution.c",
+        "librepo/util.c",
+        "librepo/xmlparser.c",
+        "librepo/yum.c",
+    ],
+    implementation_deps = [":private_headers"],
+    local_defines = [
+        'G_LOG_DOMAIN=\\"librepo\\"',
+        "_FILE_OFFSET_BITS=64",
+        "_LARGEFILE_SOURCE",
+        "_LARGEFILE64_SOURCE",
+        "HAVE_PGPPRTPARAMS2",
+        "HAVE_PGPVERIFYSIGNATURE2",
+        "WITH_ZCHUNK",
+    ] + select({
+        # Sources set _POSIX_C_SOURCE/_XOPEN_SOURCE, which hides BSD/Darwin
+        # extensions such as mkdtemp() on macOS.
+        "@platforms//os:macos": ["_DARWIN_C_SOURCE"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":public_headers",
+        "@curl",
+        "@glib//gio",
+        "@glib//glib",
+        "@libxml2",
+        "@openssl//:crypto",
+        "@rpm",
+        "@zchunk",
+    ],
+)

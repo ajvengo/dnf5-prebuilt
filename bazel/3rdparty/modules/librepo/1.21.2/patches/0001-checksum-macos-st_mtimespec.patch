@@ -1,0 +1,14 @@
+--- a/librepo/checksum.c
++++ b/librepo/checksum.c
+@@ -226,7 +226,11 @@
+         if (fstat(fd, &st) == 0) {
+             timestamp = st.st_mtime;
+             timestamp *= 1000000000; //convert sec timestamp to nanosec timestamp
++#if __APPLE__
++            timestamp += st.st_mtimespec.tv_nsec;
++#else
+             timestamp += st.st_mtim.tv_nsec;
++#endif
+         }
+     }
+ 

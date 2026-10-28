@@ -1,0 +1,11 @@
+{
+    "homepage": "https://github.com/rpm-software-management/librepo",
+    "maintainers": [],
+    "repository": [
+        "github:rpm-software-management/librepo"
+    ],
+    "versions": [
+        "1.21.2"
+    ],
+    "yanked_versions": {}
+}
