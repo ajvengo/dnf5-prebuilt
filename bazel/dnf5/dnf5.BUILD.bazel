@@ -316,31 +316,11 @@ cc_shared_library(
 
 # --- dnf5 ----------------------------------------------------------------------
 
-cc_library(
-    name = "dnf5_obj",
+cc_binary(
+    name = "dnf5",
     srcs = glob(["dnf5/**/*.cpp"]),
     copts = COPTS + INC_DNF5,
     cxxopts = CXXOPTS,
-    local_defines = DEFINES + [
-        "DNF_BUILD_APPLICATION",
-        'GETTEXT_DOMAIN=\\"dnf5\\"',
-        'LIBDIR=\\"/usr/lib64\\"',
-        'INSTALL_PREFIX=\\"/usr\\"',
-        'SYSCONFIG_DIR=\\"/etc\\"',
-    ],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":common_dnf5",
-        ":headers",
-        ":libdnf5_cli_obj",
-        ":libdnf5_obj",
-        "@rpm",
-        "@toml11",
-    ],
-)
-
-cc_binary(
-    name = "dnf5",
     dynamic_deps = [
         ":libdnf5",
         ":libdnf5-cli",
@@ -349,9 +329,26 @@ cc_binary(
     # ENABLE_EXPORTS: dnf5 plugins resolve symbols from the executable.
     linkopts = select({
         MACOS: ["-Wl,-export_dynamic"],
-        "//conditions:default": ["-rdynamic"],
+        "//conditions:default": [
+            "-Wl,--export-dynamic",
+            "-rdynamic",
+        ],
     }),
-    deps = [":dnf5_obj"],
+    local_defines = DEFINES + [
+        "DNF_BUILD_APPLICATION",
+        'GETTEXT_DOMAIN=\\"dnf5\\"',
+        'LIBDIR=\\"/usr/lib64\\"',
+        'INSTALL_PREFIX=\\"/usr\\"',
+        'SYSCONFIG_DIR=\\"/etc\\"',
+    ],
+    deps = [
+        ":common_dnf5",
+        ":headers",
+        ":libdnf5_cli_obj",
+        ":libdnf5_obj",
+        "@rpm",
+        "@toml11",
+    ],
 )
 
 # --- Plugins -------------------------------------------------------------------

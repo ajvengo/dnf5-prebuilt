@@ -1,0 +1,114 @@
+{
+  "_comment": [
+    "any2bazel parity configuration for the Bazel build of dnf5 (@dnf5, see",
+    "bazel/dnf5/dnf5.BUILD.bazel) against the upstream CMake build configured by",
+    "tools/any2bazel/reference_configure.sh. Rationale for every entry is in",
+    "_rationale; regenerate with tools/any2bazel/reference.sh and bazel_model.sh."
+  ],
+  "bazel_args": [
+    "--config=linux_amd64",
+    "-c",
+    "opt",
+    "--nostart_end_lib"
+  ],
+  "exclude_targets": [
+    "automatic_cmd_plugin",
+    "needs_restarting_cmd_plugin"
+  ],
+  "target_map": {
+    "dnf5": "@@+dnf5_extension+dnf5//:dnf5"
+  },
+  "dep_map": {
+    "dnf5-cli": ":libdnf5-cli.so.3",
+    "stdc++": "c++",
+    "fmt": "dnf5-deps",
+    "json-c": "dnf5-deps",
+    "pkgmanifest": "dnf5-deps",
+    "popt": "dnf5-deps",
+    "rpm": "dnf5-deps",
+    "rpmbuild": "dnf5-deps",
+    "rpmio": "dnf5-deps",
+    "smartcols": "dnf5-deps",
+    "z": "dnf5-deps"
+  },
+  "include_tests": false,
+  "ignore": {
+    "defines": [
+      "PROJECT_BINARY_DIR=\"/build\"",
+      "PROJECT_SOURCE_DIR=\"/src\"",
+      "actions_EXPORTS",
+      "builddep_cmd_plugin_EXPORTS",
+      "changelog_cmd_plugin_EXPORTS",
+      "dnf5_EXPORTS",
+      "config_manager_cmd_plugin_EXPORTS",
+      "copr_cmd_plugin_EXPORTS",
+      "expired_pgp_keys_EXPORTS",
+      "libdnf5_cli_EXPORTS",
+      "local_plugin_EXPORTS",
+      "manifest_cmd_plugin_EXPORTS",
+      "repoclosure_cmd_plugin_EXPORTS",
+      "repomanage_cmd_plugin_EXPORTS",
+      "reposync_cmd_plugin_EXPORTS"
+    ],
+    "flags": [
+      "-Werror",
+      "-Werror=unused-result",
+      "-Wl,--as-needed"
+    ],
+    "flags_prefixes": [
+      "-fmacro-prefix-map="
+    ],
+    "link_flags": [
+      "-DNDEBUG"
+    ],
+    "link_flags_prefixes": [],
+    "include_prefixes": [
+      "/usr/include/sysprof-6"
+    ],
+    "include_map": [
+      {
+        "from": "/usr/include/json-c",
+        "to": "@json-c"
+      },
+      {
+        "from": "external/json-c+",
+        "to": "@json-c"
+      },
+      {
+        "from": "/usr/include/libxml2",
+        "to": "@libxml2"
+      },
+      {
+        "from": "external/libxml2+/include",
+        "to": "@libxml2"
+      },
+      {
+        "from": "/usr/include/glib-2.0",
+        "to": "@glib"
+      },
+      {
+        "from": "/usr/lib64/glib-2.0/include",
+        "to": "@glib"
+      },
+      {
+        "from": "external/glib+/glib/include_glib-2.0",
+        "to": "@glib"
+      }
+    ]
+  },
+  "_rationale": {
+    "exclude_targets": "automatic and needs-restarting need sdbus-c++/systemd, which are out of scope for a portable build; they are configured in the reference only because they cannot be switched off.",
+    "target_map": "Bazel keys targets by label; @dnf5 is created by the dnf5_extension module extension.",
+    "dep_map.dnf5-cli": "libdnf5-cli is linked as a shared library on both sides; CMake spells it as a library name, Bazel as -l:libdnf5-cli.so.3.",
+    "dep_map.stdc++": "Upstream links libstdc++ explicitly (for clang); the hermetic LLVM toolchain uses libc++ on every platform.",
+    "dep_map.*->dnf5-deps": "Every third-party library (fmt, json-c, libpkgmanifest, popt, librpm*, libsmartcols, zlib, ...) is linked into one in-project shared object, libdnf5-deps, instead of separate system shared libraries; see the THIRD_PARTY list in bazel/dnf5/dnf5.BUILD.bazel.",
+    "defines.PROJECT_*_DIR": "Absolute build/source paths of the reference container; only used by the test suite, which is not built.",
+    "defines.*_EXPORTS": "Added by CMake to every shared library target and to executables with ENABLE_EXPORTS (dnf5); not referenced by the dnf5 sources.",
+    "flags.-Werror": "Upstream's warnings-as-errors policy is tuned for GCC; this build uses clang (where it would only add clang-specific breakage) and the repository's global -w. It does not change generated code.",
+    "flags.-Wl,--as-needed": "Upstream adds this linker flag as a compile option (a no-op when compiling) and only for non-clang compilers.",
+    "flags_prefixes.-fmacro-prefix-map=": "Both sides strip the source root from __FILE__; the spelling of the root differs (/src vs the external repository path).",
+    "include_prefixes./usr/include/sysprof-6": "Part of glib-2.0's pkg-config cflags on Fedora (optional sysprof tracing support); not used by dnf5 nor by the BCR glib.",
+    "include_map": "pkg-config include roots of system libraries vs the include roots of the corresponding Bazel modules.",
+    "link_flags.-DNDEBUG": "CMake repeats the RelWithDebInfo compile flags on the link line, where -DNDEBUG has no effect."
+  }
+}

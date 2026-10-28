@@ -1,0 +1,14 @@
+libsolv-0.7.40-2.fc44.x86_64
+librepo-1.21.2-1.fc44.x86_64
+rpm-6.0.2-1.fc44.x86_64
+fmt-11.2.0-4.fc44.x86_64
+json-c-0.18-8.fc44.x86_64
+toml11-devel-4.4.0-3.fc44.x86_64
+libxml2-2.12.10-6.fc44.x86_64
+glib2-2.88.4-1.fc44.x86_64
+sqlite-3.51.2-2.fc44.x86_64
+util-linux-core-2.41.6-1.fc44.x86_64
+libmodulemd-2.15.3-1.fc44.x86_64
+libacl-2.4.0-1.fc44.x86_64
+libpkgmanifest-0.6.1-1.fc44.x86_64
+yaml-cpp-0.8.0-5.fc44.x86_64
