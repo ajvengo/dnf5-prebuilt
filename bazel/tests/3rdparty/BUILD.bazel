@@ -27,3 +27,10 @@ cc_test(
         "@rpm//:librpmbuild",
     ],
 )
+
+cc_test(
+    name = "libsolv_test",
+    srcs = ["libsolv_test.c"],
+    linkstatic = True,
+    deps = ["@libsolv//:libsolvext"],
+)

@@ -1,0 +1,14 @@
+{
+    "integrity": "sha256-OLTuGST4vR7A9rLsFH5MVMberBMttfkLQhS0PM0y/dY=",
+    "overlay": {
+        "BUILD.bazel": "sha256-+68Uq8idrBmuElSfYNFmycNx0yfo1Mr/aJl1ju3q2V4=",
+        "MODULE.bazel": "sha256-YZ8vyj2gvW9uruR3VSXGZTwLDJhY7IEmDS/L6OC730U=",
+        "bazel/solvversion.h": "sha256-QORemkTBmQXulPf6lqV3DI1m7eu2wH5t6h6LTWPgt3M="
+    },
+    "patch_strip": 1,
+    "patches": {
+        "0001-repodata-rename-strchrnul-fallback.patch": "sha256-ArxJ1Akkn8hpmHKXGXjv0iMWSH0DZfAawm6jDpkI78c="
+    },
+    "strip_prefix": "libsolv-0.7.41",
+    "url": "https://github.com/openSUSE/libsolv/archive/refs/tags/0.7.41.tar.gz"
+}

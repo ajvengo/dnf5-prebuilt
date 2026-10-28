@@ -1,0 +1,12 @@
+--- a/src/repodata.c
++++ b/src/repodata.c
+@@ -255,6 +255,9 @@
+  */
+ 
+ #ifndef HAVE_STRCHRNUL
++/* Renamed: newer SDKs (e.g. macOS 15.4) declare strchrnul even when the
++   deployment target predates it, which clashes with a static definition. */
++#define strchrnul solv_strchrnul
+ static inline const char *strchrnul(const char *str, char x)
+ {
+   const char *p = strchr(str, x);

@@ -1,0 +1,11 @@
+{
+    "homepage": "https://github.com/openSUSE/libsolv",
+    "maintainers": [],
+    "repository": [
+        "github:openSUSE/libsolv"
+    ],
+    "versions": [
+        "0.7.41"
+    ],
+    "yanked_versions": {}
+}

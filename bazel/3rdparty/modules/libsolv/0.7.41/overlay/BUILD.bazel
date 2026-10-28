@@ -1,0 +1,224 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])  # BSD-3-Clause
+
+exports_files(["LICENSE.BSD"])
+
+# Feature set modelled on Fedora's libsolv package (FEDORA=1, librpm-based
+# rpmdb/rpmpkg, rpmmd, comps, appdata, complex deps, multi semantics, libxml2,
+# zlib/xz/bzip2/zstd/zchunk compression). Repository formats of other
+# distributions (suse, debian, arch, apk, conda) are not built. Checksums use
+# the built-in implementation instead of OpenSSL.
+#
+# libsolv's CMake passes all configuration as -D flags (there is no config.h);
+# keep these in sync with bazel/solvversion.h.
+
+COMMON_DEFINES = [
+    "FEDORA",
+    "_FILE_OFFSET_BITS=64",
+    "WITH_LIBXML2=1",
+    "HAVE_RPMDBFSTAT=1",
+    "ENABLE_LINKED_PKGS=1",
+    "ENABLE_COMPLEX_DEPS=1",
+    "MULTI_SEMANTICS=1",
+    "ENABLE_RPMDB=1",
+    "ENABLE_RPMPKG=1",
+    "ENABLE_RPMMD=1",
+    "ENABLE_RPMPKG_LIBRPM=1",
+    "ENABLE_RPMDB_LIBRPM=1",
+    "ENABLE_RPMDB_BYRPMHEADER=1",
+    "ENABLE_COMPS=1",
+    "ENABLE_HELIXREPO=1",
+    "ENABLE_APPDATA=1",
+    "ENABLE_ZLIB_COMPRESSION=1",
+    "ENABLE_LZMA_COMPRESSION=1",
+    "ENABLE_BZIP2_COMPRESSION=1",
+    "ENABLE_ZSTD_COMPRESSION=1",
+    "ENABLE_ZCHUNK_COMPRESSION=1",
+    "WITH_SYSTEM_ZCHUNK=1",
+] + select({
+    "@platforms//os:linux": [
+        "HAVE_STRCHRNUL=1",
+        "HAVE_FOPENCOOKIE=1",
+        "HAVE_QSORT_R=1",
+    ],
+    "@platforms//os:macos": [
+        "HAVE_FUNOPEN=1",
+        "HAVE_QSORT_R=1",
+    ],
+    "//conditions:default": [],
+})
+
+LIBSOLV_HDRS = [
+    "src/bitmap.h",
+    "src/chksum.h",
+    "src/dataiterator.h",
+    "src/dirpool.h",
+    "src/evr.h",
+    "src/hash.h",
+    "src/knownid.h",
+    "src/policy.h",
+    "src/pool.h",
+    "src/poolarch.h",
+    "src/poolid.h",
+    "src/pooltypes.h",
+    "src/poolvendor.h",
+    "src/problems.h",
+    "src/queue.h",
+    "src/repo.h",
+    "src/repo_solv.h",
+    "src/repo_write.h",
+    "src/repodata.h",
+    "src/rules.h",
+    "src/selection.h",
+    "src/solvable.h",
+    "src/solver.h",
+    "src/solverdebug.h",
+    "src/strpool.h",
+    "src/transaction.h",
+    "src/util.h",
+]
+
+LIBSOLVEXT_HDRS = [
+    "ext/pool_fileconflicts.h",
+    "ext/pool_parserpmrichdep.h",
+    "ext/repo_appdata.h",
+    "ext/repo_comps.h",
+    "ext/repo_deltainfoxml.h",
+    "ext/repo_helix.h",
+    "ext/repo_repomdxml.h",
+    "ext/repo_rpmdb.h",
+    "ext/repo_rpmmd.h",
+    "ext/repo_updateinfoxml.h",
+    "ext/solv_xfopen.h",
+    "ext/testcase.h",
+    "ext/tools_util.h",
+]
+
+# Installed headers: <solv/*.h>. They include each other by bare name, so
+# they are staged into a single include/solv/ directory.
+PUBLIC_HDRS = LIBSOLV_HDRS + LIBSOLVEXT_HDRS + ["bazel/solvversion.h"]
+
+[
+    copy_file(
+        name = "stage_" + hdr.replace("/", "_"),
+        src = hdr,
+        out = "include/solv/" + hdr.split("/")[-1],
+        visibility = ["//visibility:private"],
+    )
+    for hdr in PUBLIC_HDRS
+]
+
+cc_library(
+    name = "public_headers",
+    hdrs = ["include/solv/" + hdr.split("/")[-1] for hdr in PUBLIC_HDRS],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:private"],
+)
+
+# libsolv sources include each other's headers by bare name ("pool.h") and
+# the generated "solvversion.h".
+cc_library(
+    name = "private_headers",
+    hdrs = glob([
+        "src/*.h",
+        "ext/*.h",
+    ]) + ["bazel/solvversion.h"],
+    includes = [
+        "bazel",
+        "ext",
+        "src",
+    ],
+    textual_hdrs = ["src/qsort_r.c"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "libsolv",
+    srcs = [
+        "src/apk.c",
+        "src/bitmap.c",
+        "src/chksum.c",
+        "src/chksum_impl.c",
+        "src/cleandeps.c",
+        "src/cplxdeps.c",
+        "src/decision.c",
+        "src/dirpool.c",
+        "src/diskusage.c",
+        "src/evr.c",
+        "src/filelistfilter.c",
+        "src/fileprovides.c",
+        "src/linkedpkg.c",
+        "src/md5.c",
+        "src/order.c",
+        "src/policy.c",
+        "src/pool.c",
+        "src/poolarch.c",
+        "src/pooldep.c",
+        "src/poolid.c",
+        "src/poollang.c",
+        "src/poolvendor.c",
+        "src/poolwhatprovides.c",
+        "src/problems.c",
+        "src/queue.c",
+        "src/repo.c",
+        "src/repo_solv.c",
+        "src/repo_write.c",
+        "src/repodata.c",
+        "src/repopage.c",
+        "src/rules.c",
+        "src/selection.c",
+        "src/sha1.c",
+        "src/sha2.c",
+        "src/solvable.c",
+        "src/solver.c",
+        "src/solver_util.c",
+        "src/solverdebug.c",
+        "src/solvversion.c",
+        "src/strpool.c",
+        "src/suse.c",
+        "src/transaction.c",
+        "src/userinstalled.c",
+        "src/util.c",
+    ],
+    implementation_deps = [":private_headers"],
+    local_defines = COMMON_DEFINES + ["LIBSOLV_INTERNAL=1"],
+    deps = [":public_headers"],
+)
+
+cc_library(
+    name = "libsolvext",
+    srcs = [
+        "ext/pool_fileconflicts.c",
+        "ext/pool_parserpmrichdep.c",
+        "ext/repo_appdata.c",
+        "ext/repo_comps.c",
+        "ext/repo_deltainfoxml.c",
+        "ext/repo_helix.c",
+        "ext/repo_repomdxml.c",
+        "ext/repo_rpmdb.c",
+        "ext/repo_rpmmd.c",
+        "ext/repo_testcase.c",
+        "ext/repo_updateinfoxml.c",
+        "ext/repodata_diskusage.c",
+        "ext/solv_xfopen.c",
+        "ext/solv_xmlparser.c",
+        "ext/solv_zchunk.c",
+        "ext/testcase.c",
+    ],
+    implementation_deps = [":private_headers"],
+    local_defines = COMMON_DEFINES,
+    deps = [
+        ":libsolv",
+        "@bzip2//:bz2",
+        "@libxml2",
+        "@rpm",
+        "@xz//:lzma",
+        "@zchunk",
+        "@zlib",
+        "@zstd",
+    ],
+)

@@ -1,0 +1,48 @@
+/*
+ * solvversion.h for libsolv 0.7.41, generated from src/solvversion.h.in with
+ * the feature set enabled in BUILD.bazel.
+ */
+
+#ifndef LIBSOLV_SOLVVERSION_H
+#define LIBSOLV_SOLVVERSION_H
+
+#define LIBSOLV_VERSION_STRING "0.7.41"
+#define LIBSOLV_VERSION_MAJOR 0
+#define LIBSOLV_VERSION_MINOR 7
+#define LIBSOLV_VERSION_PATCH 41
+#define LIBSOLV_VERSION (LIBSOLV_VERSION_MAJOR * 10000 + LIBSOLV_VERSION_MINOR * 100 + LIBSOLV_VERSION_PATCH)
+
+extern const char solv_version[];
+extern int solv_version_major;
+extern int solv_version_minor;
+extern int solv_version_patch;
+extern const char solv_toolversion[];
+
+#define LIBSOLV_FEATURE_LINKED_PKGS
+#define LIBSOLV_FEATURE_COMPLEX_DEPS
+#define LIBSOLV_FEATURE_MULTI_SEMANTICS
+/* #undef LIBSOLV_FEATURE_CONDA */
+
+#define LIBSOLVEXT_FEATURE_RPMPKG
+#define LIBSOLVEXT_FEATURE_RPMDB
+#define LIBSOLVEXT_FEATURE_RPMDB_BYRPMHEADER
+/* #undef LIBSOLVEXT_FEATURE_PUBKEY */
+#define LIBSOLVEXT_FEATURE_RPMMD
+/* #undef LIBSOLVEXT_FEATURE_SUSEREPO */
+#define LIBSOLVEXT_FEATURE_COMPS
+#define LIBSOLVEXT_FEATURE_HELIXREPO
+/* #undef LIBSOLVEXT_FEATURE_DEBIAN */
+/* #undef LIBSOLVEXT_FEATURE_ARCHREPO */
+/* #undef LIBSOLVEXT_FEATURE_HAIKU */
+#define LIBSOLVEXT_FEATURE_APPDATA
+/* #undef LIBSOLVEXT_FEATURE_APK */
+#define LIBSOLVEXT_FEATURE_ZLIB_COMPRESSION
+#define LIBSOLVEXT_FEATURE_LZMA_COMPRESSION
+#define LIBSOLVEXT_FEATURE_BZIP2_COMPRESSION
+#define LIBSOLVEXT_FEATURE_ZSTD_COMPRESSION
+#define LIBSOLVEXT_FEATURE_ZCHUNK_COMPRESSION
+
+/* see tools/common_write.c for toolversion history */
+#define LIBSOLV_TOOLVERSION "1.2"
+
+#endif
