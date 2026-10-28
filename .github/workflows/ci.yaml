@@ -16,6 +16,7 @@ jobs:
   build:
     uses: ./.github/workflows/build.yaml
     secrets:
+      BUILDBUDDY_ENDPOINT: ${{ secrets.BUILDBUDDY_ENDPOINT }}
       BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
 
   e2e:

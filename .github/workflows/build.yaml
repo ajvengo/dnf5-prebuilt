@@ -5,6 +5,9 @@ name: Build
 on:
   workflow_call:
     secrets:
+      BUILDBUDDY_ENDPOINT:
+        description: BuildBuddy host name (gRPC at grpcs://<host>, invocations at https://<host>/invocation/)
+        required: false
       BUILDBUDDY_API_KEY:
         required: false
 
@@ -18,6 +21,7 @@ jobs:
         # Every platform is cross-compiled with the hermetic LLVM toolchain.
         platform: [linux_amd64, linux_arm64, osx_amd64, osx_arm64]
     env:
+      BUILDBUDDY_ENDPOINT: ${{ secrets.BUILDBUDDY_ENDPOINT }}
       BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
     steps:
       - uses: actions/checkout@v4
@@ -25,13 +29,17 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: ${{ env.BUILDBUDDY_API_KEY == '' && matrix.platform || false }}
+          disk-cache: ${{ (env.BUILDBUDDY_ENDPOINT == '' || env.BUILDBUDDY_API_KEY == '') && matrix.platform || false }}
       - name: Configure remote cache
-        if: env.BUILDBUDDY_API_KEY != ''
+        if: env.BUILDBUDDY_ENDPOINT != '' && env.BUILDBUDDY_API_KEY != ''
         run: |
           {
             echo "common --config=buildbuddy"
-            echo "common --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}"
+            echo "common:buildbuddy --bes_backend=grpcs://${BUILDBUDDY_ENDPOINT}"
+            echo "common:buildbuddy --bes_results_url=https://${BUILDBUDDY_ENDPOINT}/invocation/"
+            echo "common:buildbuddy --remote_cache=grpcs://${BUILDBUDDY_ENDPOINT}"
+            echo "common:buildbuddy-rbe --remote_executor=grpcs://${BUILDBUDDY_ENDPOINT}"
+            echo "common:buildbuddy --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}"
           } > .bazelrc.user
       - name: Build
         run: >

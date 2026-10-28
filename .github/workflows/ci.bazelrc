@@ -6,16 +6,15 @@ common --show_progress_rate_limit=30
 test --test_output=errors
 
 # BuildBuddy remote cache / execution, enabled by the workflows when the
-# BUILDBUDDY_API_KEY secret is available (the key is passed with
-# --remote_header by the workflow, never stored here).
-common:buildbuddy --bes_results_url=https://app.buildbuddy.io/invocation/
-common:buildbuddy --bes_backend=grpcs://remote.buildbuddy.io
-common:buildbuddy --remote_cache=grpcs://remote.buildbuddy.io
+# BUILDBUDDY_ENDPOINT (host name) and BUILDBUDDY_API_KEY secrets are available.
+# The workflow writes the endpoints derived from the host (--bes_backend,
+# --remote_cache and, for buildbuddy-rbe, --remote_executor at grpcs://<host>;
+# --bes_results_url at https://<host>/invocation/) and the API key
+# (--remote_header) to .bazelrc.user; none of them are stored here.
 common:buildbuddy --remote_timeout=3600
 common:buildbuddy --noexperimental_remote_cache_chunking
 common:buildbuddy-rbe --config=buildbuddy
 common:buildbuddy-rbe --config=rbe
-common:buildbuddy-rbe --remote_executor=grpcs://remote.buildbuddy.io
 common:buildbuddy-rbe --jobs=100
 
 # Hosted runners are small; use every core (.bazelrc leaves two free).

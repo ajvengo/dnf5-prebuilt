@@ -194,6 +194,13 @@ release workflow builds the four archives, stamps their integrity into the
 module's `versions.bzl` in the release source archive, publishes the GitHub
 release and opens a pull request against the Bazel Central Registry.
 
+Repository secrets used by the workflows:
+
+| Secret | Purpose |
+|---|---|
+| `BUILDBUDDY_ENDPOINT`, `BUILDBUDDY_API_KEY` | Optional BuildBuddy remote cache: host name (gRPC at `grpcs://<host>`, invocation links at `https://<host>/invocation/`) and API key. Without them CI uses the GitHub Actions disk cache. |
+| `BCR_PUBLISH_TOKEN` | Token used to open the Bazel Central Registry pull request. |
+
 ## License
 
 The build definitions, scripts and patches in this repository are licensed
