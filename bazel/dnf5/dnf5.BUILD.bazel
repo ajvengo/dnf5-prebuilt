@@ -501,12 +501,3 @@ exports_files([
     "libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.conf",
     "libdnf5-plugins/local/local.conf",
 ])
-
-filegroup(
-    name = "licenses",
-    srcs = [
-        "COPYING.md",
-        "gpl-2.0.txt",
-        "lgpl-2.1.txt",
-    ],
-)

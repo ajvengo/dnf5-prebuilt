@@ -10,7 +10,7 @@ load(":dist.bzl", "dnf5_distribution")
 #   dnf5/lib/rpm/                     rpm configuration (RPM_CONFIGDIR)
 #   dnf5/etc/dnf/                     dnf.conf and libdnf5 plugin configuration
 #   dnf5/share/dnf5/aliases.d/        command aliases
-#   dnf5/share/licenses/dnf5/         licenses
+#   dnf5/share/licenses/              licenses and THIRD_PARTY_NOTICES.md
 #
 # Build with e.g. `bazel build //bazel/release:dnf5 --config=linux_arm64`.
 DNF5_PLUGINS = [
@@ -29,6 +29,11 @@ LIBDNF5_PLUGINS = [
     "expired-pgp-keys",
     "local_plugin",
 ]
+
+filegroup(
+    name = "licenses",
+    srcs = glob(["licenses/**"]),
+)
 
 dnf5_distribution(
     name = "dnf5",
@@ -52,7 +57,10 @@ dnf5_distribution(
         "@dnf5//:libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.conf": "etc/dnf/libdnf5-plugins",
         "@dnf5//:libdnf5-plugins/local/local.conf": "etc/dnf/libdnf5-plugins",
         "@dnf5//:aliases": "share/dnf5/aliases.d",
-        "@dnf5//:licenses": "share/licenses/dnf5",
+        # Licenses of everything bundled (collected by tools/licenses/collect.py)
+        # and of this repository (the launcher).
+        ":licenses": "share/licenses",
+        "//:LICENSE": "share/licenses/dnf5-prebuilt",
     } | {
         "@dnf5//:" + p: "lib/dnf5/plugins"
         for p in DNF5_PLUGINS
