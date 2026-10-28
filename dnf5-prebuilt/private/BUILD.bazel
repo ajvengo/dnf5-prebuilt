@@ -1,0 +1,4 @@
+exports_files(
+    glob(["*.bzl"]),
+    visibility = ["//dnf5-prebuilt:__subpackages__"],
+)

@@ -13,3 +13,5 @@ release_assets/
 # Patches applied to third-party/upstream sources are part of the build
 # (overrides global ignore rules such as *.patch).
 !*.patch
+/e2e/*/bazel-*
+/e2e/*/MODULE.bazel.lock

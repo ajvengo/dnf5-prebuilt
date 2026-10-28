@@ -1,0 +1,8 @@
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+sh_test(
+    name = "smoke_test",
+    srcs = ["smoke_test.sh"],
+    data = ["@dnf5-prebuilt//dnf5-prebuilt:current_toolchain"],
+    env = {"DNF5": "$(rootpath @dnf5-prebuilt//dnf5-prebuilt:current_toolchain)"},
+)

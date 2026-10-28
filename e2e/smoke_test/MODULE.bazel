@@ -1,0 +1,17 @@
+"""Uses the public API of dnf5-prebuilt like a consumer would."""
+
+module(name = "smoke_test")
+
+bazel_dep(name = "dnf5-prebuilt", version = "0.0.0")
+local_path_override(
+    module_name = "dnf5-prebuilt",
+    path = "../..",
+)
+
+bazel_dep(name = "rules_shell", version = "0.8.0")
+
+dnf5 = use_extension("@dnf5-prebuilt//dnf5-prebuilt:extensions.bzl", "dnf5")
+dnf5.toolchains()
+use_repo(dnf5, "dnf5_toolchains")
+
+register_toolchains("@dnf5_toolchains//:all")

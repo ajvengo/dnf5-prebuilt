@@ -1,0 +1,23 @@
+# Public API of the dnf5-prebuilt module. Nothing in this package may depend on
+# other packages of this repository or on dev_dependency modules.
+load(":toolchain.bzl", "current_dnf5_toolchain")
+
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# The dnf5 toolchain resolved for the execution platform; see
+# current_dnf5_toolchain in toolchain.bzl.
+current_dnf5_toolchain(
+    name = "current_toolchain",
+    # Needs a registered dnf5 toolchain, which this repository itself does not
+    # have (see e2e/smoke_test).
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(
+    glob(["*.bzl"]),
+    visibility = ["//visibility:public"],
+)

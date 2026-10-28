@@ -1,6 +1,6 @@
 module(
     name = "dnf5-prebuilt",
-    version = "0.0.1",
+    version = "0.0.0",
 )
 
 # Core Bazel & platform dependencies from BCR (latest published versions)

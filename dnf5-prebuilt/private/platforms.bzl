@@ -1,0 +1,21 @@
+"""Platforms prebuilt dnf5 archives are published for."""
+
+# platform name (as used in release archive names) -> exec constraints
+PLATFORMS = {
+    "linux_amd64": [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    "linux_arm64": [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+    "osx_amd64": [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+    "osx_arm64": [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+}
