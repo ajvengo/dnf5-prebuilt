@@ -1,0 +1,39 @@
+module(
+    name = "dnf5-prebuilt",
+    version = "0.0.1",
+)
+
+# Core Bazel & platform dependencies from BCR (latest published versions)
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "platforms_contrib", version = "1.0.0-alpha.0", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.9.2", dev_dependency = True)
+bazel_dep(name = "bazel_lib", version = "3.7.2", dev_dependency = True)
+bazel_dep(name = "rules_cc", version = "0.2.26", dev_dependency = True)
+bazel_dep(name = "rules_shell", version = "0.8.0", dev_dependency = True)
+bazel_dep(name = "tar.bzl", version = "0.10.9", dev_dependency = True)
+
+register_toolchains(
+    "@python_interpreters//:all",
+    dev_dependency = True,
+)
+
+# Hermetic LLVM C/C++ toolchain from BCR
+bazel_dep(name = "llvm", version = "0.8.26", dev_dependency = True)
+
+register_toolchains(
+    "@llvm//toolchain:all",
+    dev_dependency = True,
+)
+
+# Remote Execution Platform setup from BCR
+bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4", dev_dependency = True)
+
+buildbuddy = use_extension(
+    "@toolchains_buildbuddy//:extensions.bzl",
+    "buildbuddy",
+    dev_dependency = True,
+)
+buildbuddy.platform(
+    buildbuddy_container_image = "UBUNTU24_04_IMAGE",
+)
+use_repo(buildbuddy, "buildbuddy_toolchain")

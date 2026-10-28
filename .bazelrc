@@ -1,0 +1,77 @@
+# Startup options
+startup --experimental_remote_repo_contents_cache
+
+# Common settings
+common --deleted_packages=e2e/smoke_test
+
+# Bazel Registry configuration: Local bazel/3rdparty registry first, fallback to BCR
+common --registry=file://%workspace%/bazel/3rdparty
+common --registry=https://bcr.bazel.build
+common --experimental_repo_remote_exec
+
+# Bzlmod settings
+common --enable_bzlmod
+common --lockfile_mode=update
+
+# Hermeticity and strict environment
+build --incompatible_strict_action_env
+build --sandbox_default_allow_network=false
+
+# Suppress C/C++ compiler warnings and action output noise
+build --copt=-w
+build --cxxopt=-w
+build --host_copt=-w
+build --host_cxxopt=-w
+build --output_filter=^$
+
+# Local resource limits (leave 2 CPUs free)
+build --local_resources=cpu=HOST_CPUS-2
+build --local_test_jobs=HOST_CPUS-2
+build --nobuild_runfile_links
+build --@curl//:ssl_lib=openssl
+build --@curl//:http_only=false
+build --experimental_remote_cache_chunking
+
+# Bazel RBE configuration profile targeting //bazel:ubuntu24_04_amd64
+#build:rbe --host_platform=//bazel:ubuntu24_04_amd64
+#build:rbe --extra_execution_platforms=//bazel:ubuntu24_04_amd64,@buildbuddy_toolchain//:platform_linux_x86_64
+build:rbe --spawn_strategy=remote
+build:rbe --remote_local_fallback=true
+build:rbe --remote_download_outputs=minimal
+build:rbe --nobuild_runfile_links
+build:rbe --remote_cache_compression
+build:rbe --experimental_remote_cache_chunking
+build:rbe --experimental_repo_remote_exec
+build:rbe --disk_cache=
+build:rbe --repository_cache=
+build:rbe --noslim_profile
+build:rbe --experimental_profile_include_target_label
+build:rbe --experimental_profile_include_primary_output
+test:rbe --remote_default_exec_properties=dockerNetwork=bridge
+test:rbe --remote_default_exec_properties=network=bridge
+
+# Target platform configurations via @platforms_contrib
+build:linux_amd64 --platforms=//bazel:linux_amd64
+build:linux_arm64 --platforms=//bazel:linux_arm64
+build:osx_amd64 --platforms=//bazel:osx_amd64
+build:osx_arm64 --platforms=//bazel:osx_arm64
+
+# Test output settings
+test --test_summary=terse
+test --test_output=errors
+test --sandbox_default_allow_network=true
+
+# Docker sandbox configuration (matches RBE environment gcr.io/flame-public/rbe-ubuntu24-04:latest)
+build:docker --experimental_enable_docker_sandbox
+build:docker --experimental_docker_image=gcr.io/flame-public/rbe-ubuntu24-04:latest
+build:docker --spawn_strategy=docker
+
+# CI configuration
+common:ci --color=yes
+common:ci --show_progress_rate_limit=5
+common:ci --ui_event_filters=-warning
+test:ci --test_output=errors
+test:ci --test_summary=terse
+
+# Import user-specific configuration (must be last)
+try-import %workspace%/.bazelrc.user
