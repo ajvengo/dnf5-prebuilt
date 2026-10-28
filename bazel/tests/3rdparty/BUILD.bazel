@@ -6,12 +6,24 @@ load("@rules_cc//cc:defs.bzl", "cc_test")
 cc_test(
     name = "smartcols_test",
     srcs = ["smartcols_test.c"],
+    linkstatic = True,
     deps = ["@libsmartcols//:smartcols"],
 )
 
 cc_test(
     name = "acl_test",
     srcs = ["acl_test.c"],
+    linkstatic = True,
     target_compatible_with = ["@platforms//os:linux"],
     deps = ["@libacl//:acl"],
+)
+
+cc_test(
+    name = "rpm_test",
+    srcs = ["rpm_test.cc"],
+    linkstatic = True,
+    deps = [
+        "@rpm",
+        "@rpm//:librpmbuild",
+    ],
 )

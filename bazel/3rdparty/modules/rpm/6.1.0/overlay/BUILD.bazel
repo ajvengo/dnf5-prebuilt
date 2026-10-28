@@ -1,0 +1,215 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//:bazel_defs.bzl", "private_includes")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # GPL-2.0-or-later, librpm* LGPL-2.1-or-later
+
+exports_files(["COPYING"])
+
+# Builds librpmio, librpm, librpmsign and librpmbuild as static libraries.
+# Optional features are configured in bazel/config.h; plugins, NLS, OpenMP,
+# Python bindings and the command-line tools are not built.
+
+LINUX = "@platforms//os:linux"
+
+
+COPTS = [
+    "-fno-strict-overflow",
+    "-fno-delete-null-pointer-checks",
+]
+
+CONLYOPTS = ["-std=gnu99"]
+
+CXXOPTS = ["-std=gnu++20"]
+
+DEFINES = [
+    "HAVE_CONFIG_H",
+    "_GNU_SOURCE",
+    "_FILE_OFFSET_BITS=64",
+    'RPM_CONFIGDIR=\\"/usr/lib/rpm\\"',
+    'LOCALEDIR=\\"/usr/share/locale\\"',
+    'LOCALSTATEDIR=\\"/var\\"',
+    'SYSCONFDIR=\\"/etc\\"',
+    'LIBRPMALIAS_FILENAME=\\"rpmpopt-6.1.0\\"',
+    'LIBRPMALIAS_EXECPATH=\\"/usr/bin\\"',
+]
+
+# Public API: <rpm/*.h>.
+cc_library(
+    name = "headers",
+    hdrs = glob(["include/rpm/*.h"]),
+    includes = ["include"],
+    deps = ["@popt"],  # rpmcli.h includes <popt.h>
+)
+
+# Configure-time and generated headers plus the global private include dirs
+# (misc/ and the build dir). Implementation-only, never exported.
+cc_library(
+    name = "private_headers",
+    hdrs = glob([
+        "misc/*.h",
+        "rpmio/*.hh",
+        "lib/*.hh",
+        "lib/backend/*.hh",
+        "lib/backend/ndb/*.h",
+        "build/*.hh",
+    ]) + [
+        "bazel/config.h",
+        "bazel/tagtbl.inc",
+    ],
+    textual_hdrs = ["rpmio/modemuncher.cc"],  # #included by lposix.cc
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "librpmio",
+    srcs = [
+        "rpmio/argv.cc",
+        "rpmio/base64.cc",
+        "rpmio/digest.cc",
+        "rpmio/expression.cc",
+        "rpmio/lposix.cc",
+        "rpmio/macro.cc",
+        "rpmio/progname.cc",
+        "rpmio/rgetopt.cc",
+        "rpmio/rpmfileutil.cc",
+        "rpmio/rpmglob.cc",
+        "rpmio/rpmhook.cc",
+        "rpmio/rpmio.cc",
+        "rpmio/rpmkeyring.cc",
+        "rpmio/rpmlog.cc",
+        "rpmio/rpmlua.cc",
+        "rpmio/rpmmalloc.cc",
+        "rpmio/rpmpgp.cc",
+        "rpmio/rpmpgp_sequoia.cc",
+        "rpmio/rpmsq.cc",
+        "rpmio/rpmstring.cc",
+        "rpmio/rpmstrpool.cc",
+        "rpmio/rpmsw.cc",
+        "rpmio/rpmver.cc",
+        "rpmio/rpmvercmp.cc",
+        "rpmio/url.cc",
+    ],
+    conlyopts = CONLYOPTS,
+    copts = COPTS + private_includes(["rpmio"]),
+    cxxopts = CXXOPTS,
+    implementation_deps = [":private_headers"],
+    local_defines = DEFINES,
+    deps = [
+        ":headers",
+        "@bzip2//:bz2",
+        "@lua",
+        "@popt",
+        # Provides the OpenPGP implementation and the rpmDigest* API.
+        "@rpm-sequoia",
+        "@xz//:lzma",
+        "@zlib",
+        "@zstd",
+    ],
+)
+
+cc_library(
+    name = "librpm",
+    srcs = glob([
+        "lib/*.cc",
+        "lib/backend/ndb/*.c",
+    ]) + [
+        "lib/backend/dbi.cc",
+        "lib/backend/dbiset.cc",
+        "lib/backend/dummydb.cc",
+        "lib/backend/ndb/glue.cc",
+        "lib/backend/sqlite.cc",
+    ],
+    conlyopts = CONLYOPTS,
+    copts = COPTS + ["-Wno-sign-compare"] + private_includes([
+        "lib",
+        "rpmio",
+    ]),
+    cxxopts = CXXOPTS,
+    implementation_deps = [":private_headers"],
+    local_defines = DEFINES,
+    deps = [
+        ":headers",
+        ":librpmio",
+        "@lua",
+        "@popt",
+        "@sqlite3",
+    ] + select({
+        LINUX: [
+            "@libacl//:acl",
+            "@libcap//:cap",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "librpmsign",
+    srcs = ["sign/rpmgensig.cc"],
+    copts = COPTS + private_includes([
+        "sign",
+        "lib",
+        "rpmio",
+    ]),
+    cxxopts = CXXOPTS,
+    implementation_deps = [":private_headers"],
+    local_defines = DEFINES,
+    deps = [
+        ":headers",
+        ":librpm",
+        ":librpmio",
+        "@popt",
+    ],
+)
+
+cc_library(
+    name = "librpmbuild",
+    # misc/fts.c is the libmisc object library, linked into librpmbuild only
+    # (its symbols are hidden).
+    srcs = glob(["build/*.cc"]) + ["misc/fts.c"],
+    conlyopts = CONLYOPTS,
+    copts = COPTS + private_includes([
+        "build",
+        "lib",
+        "rpmio",
+    ]),
+    cxxopts = CXXOPTS,
+    implementation_deps = [":private_headers"],
+    local_defines = DEFINES,
+    deps = [
+        ":headers",
+        ":librpm",
+        ":librpmio",
+        ":librpmsign",
+        "@libmagic//:lib",
+        "@lua",
+        "@popt",
+    ] + select({
+        LINUX: ["@libcap//:cap"],
+        "//conditions:default": [],
+    }),
+)
+
+# Convenience target matching pkg-config `rpm` (librpm + librpmio).
+cc_library(
+    name = "rpm",
+    deps = [
+        ":librpm",
+        ":librpmio",
+    ],
+)
+
+# Runtime configuration directory (RPM_CONFIGDIR, /usr/lib/rpm upstream):
+# rpmrc, macros and the per-architecture platform/*/macros, as generated by
+# CMake's configure_file() and the installplatform script for Linux targets
+# (vendor "redhat"). It does not depend on the build host.
+filegroup(
+    name = "configdir",
+    srcs = glob(["bazel/rpmconfig/**"]),
+)
+
+# Helper run by rpm (outside the chroot, with --root) for %sysusers scriptlets
+# when systemd-sysusers is not used (%__systemd_sysusers); installed next to
+# the configuration directory.
+exports_files(["scripts/sysusers.sh"])
