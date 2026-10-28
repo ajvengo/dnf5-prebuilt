@@ -13,23 +13,20 @@ on:
 
 jobs:
   build:
-    name: build (${{ matrix.platform }})
+    # One job cross-compiles every platform with the hermetic LLVM toolchain,
+    # so the platforms share the Bazel server, exec tools and caches.
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        # Every platform is cross-compiled with the hermetic LLVM toolchain.
-        platform: [linux_amd64, linux_arm64, osx_amd64, osx_arm64]
     env:
       BUILDBUDDY_ENDPOINT: ${{ secrets.BUILDBUDDY_ENDPOINT }}
       BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
+      PLATFORMS: linux_amd64 linux_arm64 osx_amd64 osx_arm64
     steps:
       - uses: actions/checkout@v4
       - uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: ${{ (env.BUILDBUDDY_ENDPOINT == '' || env.BUILDBUDDY_API_KEY == '') && matrix.platform || false }}
+          disk-cache: ${{ env.BUILDBUDDY_ENDPOINT == '' || env.BUILDBUDDY_API_KEY == '' }}
       - name: Configure remote cache
         if: env.BUILDBUDDY_ENDPOINT != '' && env.BUILDBUDDY_API_KEY != ''
         run: |
@@ -41,23 +38,25 @@ jobs:
             echo "common:buildbuddy-rbe --remote_executor=grpcs://${BUILDBUDDY_ENDPOINT}"
             echo "common:buildbuddy --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}"
           } > .bazelrc.user
-      - name: Build
-        run: >
-          bazel --bazelrc=.github/workflows/ci.bazelrc build
-          --config=${{ matrix.platform }} -c opt
-          //bazel/release:dnf5 //bazel/tests/...
       - name: Test
-        if: matrix.platform == 'linux_amd64'
         run: >
           bazel --bazelrc=.github/workflows/ci.bazelrc test
-          --config=${{ matrix.platform }} -c opt //bazel/tests/...
-      - name: Stage archive
+          --config=linux_amd64 -c opt //bazel/tests/...
+      - name: Build
         run: |
           version=$(sed -n 's/^DNF5_VERSION = "\(.*\)"/\1/p' bazel/extensions.bzl)
           mkdir -p dist
-          cp -L bazel-bin/bazel/release/dnf5.tar.gz "dist/dnf5-${version}-${{ matrix.platform }}.tar.gz"
+          for platform in $PLATFORMS; do
+            echo "::group::${platform}"
+            bazel --bazelrc=.github/workflows/ci.bazelrc build \
+              --config="${platform}" -c opt //bazel/release:dnf5 //bazel/tests/...
+            # bazel-bin points at the configuration of the last build.
+            cp -L bazel-bin/bazel/release/dnf5.tar.gz "dist/dnf5-${version}-${platform}.tar.gz"
+            echo "::endgroup::"
+          done
+          ls -l dist
       - uses: actions/upload-artifact@v4
         with:
-          name: dnf5-${{ matrix.platform }}
+          name: dnf5
           path: dist/*.tar.gz
           if-no-files-found: error
