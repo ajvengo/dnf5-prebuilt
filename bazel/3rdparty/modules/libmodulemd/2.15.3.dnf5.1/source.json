@@ -1,8 +1,8 @@
 {
     "integrity": "sha256-kxtE6r3V99FwgD80djl8jp3qByCVieEZT/g3lCmZHMs=",
     "overlay": {
-        "BUILD.bazel": "sha256-Ygrb/pghmCUD8VwGOYuvTJNIeJKIAcICeM/BoTgCiWc=",
-        "MODULE.bazel": "sha256-q8x1s36em2f6pw+xd21HEW2freaoipmot/E2h0yE3zA=",
+        "BUILD.bazel": "sha256-lG4/zGHepIJNN10tjNUsIC2ydJTkZt27f6x3U1jgEQ0=",
+        "MODULE.bazel": "sha256-LULbcd7NQVQG3OjcbXb/dgdSWisPBLJkTa9IfGaoK4o=",
         "bazel/config.h": "sha256-6M1OZ4wMvsSerSCWkJRkdk/aSriATzHP4an7TXBLThw=",
         "bazel/modulemd-enums.c.template": "sha256-BvxbNzubiaHdf4debsyHEJmGXv7hLNZyI9hH6LgQPd0=",
         "bazel/modulemd-enums.h.template": "sha256-hEU78IBDmB6AOaqXKwFrQr61tx24Mna13BN3jBFohig=",

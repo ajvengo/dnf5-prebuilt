@@ -5,7 +5,7 @@
         "github:fedora-modularity/libmodulemd"
     ],
     "versions": [
-        "2.15.3"
+        "2.15.3.dnf5.1"
     ],
     "yanked_versions": {}
 }

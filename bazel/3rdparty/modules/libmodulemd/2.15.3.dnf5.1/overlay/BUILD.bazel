@@ -50,8 +50,12 @@ cc_library(
         repo_path("bazel"),
     ],
     implementation_deps = [":private_headers"],
-    # pkg-config: -I${includedir}/modulemd-2.0
-    includes = ["modulemd/include/modulemd-2.0"],
+    # pkg-config: -I${includedir}/modulemd-2.0; consumers such as libdnf5
+    # also include <modulemd-2.0/modulemd.h>, relative to ${includedir}.
+    includes = [
+        "modulemd/include",
+        "modulemd/include/modulemd-2.0",
+    ],
     local_defines = [
         "_GNU_SOURCE",
         "G_LOG_USE_STRUCTURED",

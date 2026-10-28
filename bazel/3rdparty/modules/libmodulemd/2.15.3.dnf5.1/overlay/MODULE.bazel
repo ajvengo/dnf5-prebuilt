@@ -1,6 +1,6 @@
 module(
     name = "libmodulemd",
-    version = "2.15.3",
+    version = "2.15.3.dnf5.1",
     bazel_compatibility = [">=8.5.0"],
     compatibility_level = 2,
 )
