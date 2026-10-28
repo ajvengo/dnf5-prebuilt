@@ -37,13 +37,6 @@ filegroup(
 
 dnf5_distribution(
     name = "dnf5",
-    executables = [
-        "dnf5",
-        "dnf5.sh",
-        "sysusers.sh",
-    ],
-    prefix = "dnf5",
-    renames = {"dnf5.sh": "dnf5"},
     srcs = {
         ":dnf5.sh": "bin",
         "@dnf5//:dnf5": "libexec",
@@ -68,5 +61,12 @@ dnf5_distribution(
         "@dnf5//:" + p: "lib/libdnf5/plugins"
         for p in LIBDNF5_PLUGINS
     },
+    executables = [
+        "dnf5",
+        "dnf5.sh",
+        "sysusers.sh",
+    ],
+    prefix = "dnf5",
+    renames = {"dnf5.sh": "dnf5"},
     visibility = ["//visibility:public"],
 )

@@ -80,7 +80,6 @@ CXXOPTS = [
     "-fvisibility-inlines-hidden",
 ]
 
-
 # include_directories() in CMake order: include/, common/ and then the
 # component's own directory. Generated headers live under $(BINDIR).
 INC_GLOBAL = [
@@ -154,14 +153,14 @@ cc_library(
         ],
         allow_empty = True,
     ) + [":config_h"],
+    # SQL schema #included by libdnf5/transaction/db/db.cpp.
+    textual_hdrs = glob(["libdnf5/**/*.sql"]),
+    visibility = ["//visibility:private"],
     deps = select({
         # Linux-only headers and APIs (gettext, <sys/auxv.h>, pipe2, ...).
         MACOS: ["@dnf5-prebuilt//bazel/dnf5/compat:macos"],
         "//conditions:default": [],
     }),
-    # SQL schema #included by libdnf5/transaction/db/db.cpp.
-    textual_hdrs = glob(["libdnf5/**/*.sql"]),
-    visibility = ["//visibility:private"],
 )
 
 # libdnf5/config.h.in -> libdnf5/conf/config.h (configure_file in
@@ -281,7 +280,7 @@ cc_library(
         "@json-c",
         "@libmodulemd//:modulemd",
         "@librepo",
-        "@libsolv//:libsolv",
+        "@libsolv",
         "@libsolv//:libsolvext",
         "@libxml2",
         "@rpm",
@@ -391,15 +390,31 @@ DNF5_PLUGIN_LINKOPTS = select({
 
 # name -> (directory, gettext domain, extra deps)
 DNF5_PLUGINS = {
-    "builddep_cmd_plugin": ("builddep_plugin", "dnf5-plugin-builddep", ["@rpm//:librpmbuild"]),
+    "builddep_cmd_plugin": (
+        "builddep_plugin",
+        "dnf5-plugin-builddep",
+        ["@rpm//:librpmbuild"],
+    ),
     "changelog_cmd_plugin": ("changelog_plugin", "dnf5-plugin-changelog", []),
-    "config-manager_cmd_plugin": ("config-manager_plugin", "dnf5-plugin-config-manager", [
-        "@curl",
-        "@fmt",
-        "@zlib",
-    ]),
-    "copr_cmd_plugin": ("copr_plugin", "dnf5-plugin-copr", ["@json-c"]),
-    "manifest_cmd_plugin": ("manifest_plugin", "dnf5_cmd_manifest", ["@libpkgmanifest"]),
+    "config-manager_cmd_plugin": (
+        "config-manager_plugin",
+        "dnf5-plugin-config-manager",
+        [
+            "@curl",
+            "@fmt",
+            "@zlib",
+        ],
+    ),
+    "copr_cmd_plugin": (
+        "copr_plugin",
+        "dnf5-plugin-copr",
+        ["@json-c"],
+    ),
+    "manifest_cmd_plugin": (
+        "manifest_plugin",
+        "dnf5_cmd_manifest",
+        ["@libpkgmanifest"],
+    ),
     "repoclosure_cmd_plugin": ("repoclosure_plugin", "dnf5-plugin-repoclosure", []),
     "repomanage_cmd_plugin": ("repomanage_plugin", "dnf5-plugin-repomanage", []),
     "reposync_cmd_plugin": ("reposync_plugin", "dnf5-plugin-reposync", []),
@@ -440,8 +455,18 @@ DNF5_PLUGINS = {
 
 # name -> (source, gettext domain, output name, extra deps)
 LIBDNF5_PLUGINS = {
-    "actions": ("libdnf5-plugins/actions/actions.cpp", "libdnf5-plugin-actions", "actions", ["@json-c"]),
-    "expired-pgp-keys": ("libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.cpp", "libdnf5-plugin-expired-pgp-keys", "expired-pgp-keys", ["@rpm"]),
+    "actions": (
+        "libdnf5-plugins/actions/actions.cpp",
+        "libdnf5-plugin-actions",
+        "actions",
+        ["@json-c"],
+    ),
+    "expired-pgp-keys": (
+        "libdnf5-plugins/expired-pgp-keys/expired-pgp-keys.cpp",
+        "libdnf5-plugin-expired-pgp-keys",
+        "expired-pgp-keys",
+        ["@rpm"],
+    ),
     "local_plugin": ("libdnf5-plugins/local/local.cpp", "libdnf5-plugin-local", "local", []),
 }
 
