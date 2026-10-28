@@ -1,0 +1,7 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+# Toolchain smoke test: must build for every platform in //bazel.
+cc_binary(
+    name = "hello",
+    srcs = ["hello.cc"],
+)

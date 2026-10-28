@@ -12,11 +12,6 @@ bazel_dep(name = "rules_cc", version = "0.2.26", dev_dependency = True)
 bazel_dep(name = "rules_shell", version = "0.8.0", dev_dependency = True)
 bazel_dep(name = "tar.bzl", version = "0.10.9", dev_dependency = True)
 
-register_toolchains(
-    "@python_interpreters//:all",
-    dev_dependency = True,
-)
-
 # Hermetic LLVM C/C++ toolchain from BCR
 bazel_dep(name = "llvm", version = "0.8.26", dev_dependency = True)
 
@@ -34,6 +29,6 @@ buildbuddy = use_extension(
     dev_dependency = True,
 )
 buildbuddy.platform(
-    buildbuddy_container_image = "UBUNTU24_04_IMAGE",
+    container_image = "docker://gcr.io/flame-public/rbe-ubuntu24-04@sha256:be9853fc45092d2cf2bda3abed30d22182881659a50bf35c7125161d7cfc8a75",
 )
 use_repo(buildbuddy, "buildbuddy_toolchain")

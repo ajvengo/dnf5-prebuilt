@@ -1,0 +1,63 @@
+# Private build infrastructure: target platforms, RBE execution platform and
+# the module extension that fetches upstream dnf5 sources.
+
+load("@platforms_contrib//os/linux/libc/glibc:glibc.bzl", "glibc_version_constraints")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["extensions.bzl"])
+
+# Target platforms. Linux targets build against glibc 2.28 headers/stubs
+# (RHEL 8 and newer) via the hermetic LLVM toolchain.
+platform(
+    name = "linux_amd64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "@llvm//constraints/libc:gnu.2.28",
+    ] + glibc_version_constraints("2.28"),
+)
+
+platform(
+    name = "linux_arm64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+        "@llvm//constraints/libc:gnu.2.28",
+    ] + glibc_version_constraints("2.28"),
+)
+
+platform(
+    name = "osx_amd64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+platform(
+    name = "osx_arm64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+# Remote execution platform: Ubuntu 24.04 container image provided by
+# toolchains_buildbuddy. Only the container image is inherited; the
+# BuildBuddy-specific properties are cleared (an empty value drops an inherited
+# key) so the platform also works on other REAPI backends. The C/C++ toolchain
+# is the hermetic LLVM one, not the image's gcc.
+platform(
+    name = "ubuntu24_04_amd64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    exec_properties = {
+        "Arch": "",
+        "OSFamily": "",
+        "dockerNetwork": "",
+    },
+    parents = ["@buildbuddy_toolchain//:platform_linux_x86_64"],
+)

@@ -12,6 +12,8 @@ common --experimental_repo_remote_exec
 # Bzlmod settings
 common --enable_bzlmod
 common --lockfile_mode=update
+# Fail when MVS resolves a direct dependency to a different version than declared
+common --check_direct_dependencies=error
 
 # Hermeticity and strict environment
 build --incompatible_strict_action_env
@@ -28,13 +30,11 @@ build --output_filter=^$
 build --local_resources=cpu=HOST_CPUS-2
 build --local_test_jobs=HOST_CPUS-2
 build --nobuild_runfile_links
-build --@curl//:ssl_lib=openssl
-build --@curl//:http_only=false
 build --experimental_remote_cache_chunking
 
 # Bazel RBE configuration profile targeting //bazel:ubuntu24_04_amd64
-#build:rbe --host_platform=//bazel:ubuntu24_04_amd64
-#build:rbe --extra_execution_platforms=//bazel:ubuntu24_04_amd64,@buildbuddy_toolchain//:platform_linux_x86_64
+build:rbe --host_platform=//bazel:ubuntu24_04_amd64
+build:rbe --extra_execution_platforms=//bazel:ubuntu24_04_amd64
 build:rbe --spawn_strategy=remote
 build:rbe --remote_local_fallback=true
 build:rbe --remote_download_outputs=minimal
@@ -50,7 +50,7 @@ build:rbe --experimental_profile_include_primary_output
 test:rbe --remote_default_exec_properties=dockerNetwork=bridge
 test:rbe --remote_default_exec_properties=network=bridge
 
-# Target platform configurations via @platforms_contrib
+# Target platform configurations (see //bazel:BUILD.bazel)
 build:linux_amd64 --platforms=//bazel:linux_amd64
 build:linux_arm64 --platforms=//bazel:linux_arm64
 build:osx_amd64 --platforms=//bazel:osx_amd64
