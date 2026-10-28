@@ -1,0 +1,15 @@
+"""https://github.com/rpm-software-management/popt
+
+Fork of the BCR popt 1.19 module: defines _GNU_SOURCE (glibc only declares
+vasprintf/stpcpy with it) and only exports <popt.h>, not popt's private src/
+directory (its system.h shadows other projects' headers of the same name).
+"""
+
+module(
+    name = "popt",
+    version = "1.19.dnf5.1",
+    bazel_compatibility = [">=7.2.1"],
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.4")
+bazel_dep(name = "platforms", version = "1.0.0")

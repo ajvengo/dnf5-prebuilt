@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-brQNZQUmy5/mPrRBW87N+c8wb3VW537/aJq8WkRnAGA=",
+    "overlay": {
+        "BUILD.bazel": "sha256-dK3+5ATovilD+6U8m+0DSWN0Y3y5dHzha2gcHDaZUDA=",
+        "MODULE.bazel": "sha256-uGPSCJhSNtYXQVDAAs0fRHXaAxpvxDJjDOlLZ+ep3c0="
+    },
+    "strip_prefix": "popt-popt-1.19-release",
+    "url": "https://github.com/rpm-software-management/popt/archive/refs/tags/popt-1.19-release.tar.gz"
+}

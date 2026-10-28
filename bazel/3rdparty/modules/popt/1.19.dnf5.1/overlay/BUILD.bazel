@@ -1,0 +1,68 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])  # MIT
+
+exports_files(["COPYING"])
+
+# Public header only: <popt.h>.
+cc_library(
+    name = "popt_h",
+    hdrs = ["src/popt.h"],
+    strip_include_prefix = "src",
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "popt",
+    srcs = [
+        "src/popt.c",
+        "src/poptconfig.c",
+        "src/popthelp.c",
+        "src/poptint.c",
+        "src/poptint.h",
+        "src/poptparse.c",
+        "src/system.h",
+    ],
+    copts = ["-Wall"],
+    linkopts = select({
+        "@platforms//os:macos": ["-liconv"],
+        "//conditions:default": [],
+    }),
+    local_defines = [
+        "_GNU_SOURCE",
+        "HAVE_FNMATCH_H",
+        "HAVE_GETEUID",
+        "HAVE_GETUID",
+        "HAVE_GLOB_H",
+        "HAVE_ICONV",
+        "HAVE_LANGINFO_H",
+        "HAVE_MBSRTOWCS",
+        "HAVE_SETREUID",
+        "HAVE_SETUID",
+        "HAVE_SRANDOM",
+        "HAVE_STDALIGN_H",
+        "HAVE_STPCPY",
+        "HAVE_STRERROR",
+        "HAVE_VASPRINTF",
+        "PACKAGE=\\\"popt\\\"",
+        "POPT_SYSCONFDIR=\\\"/etc\\\"",
+        "popt_EXPORTS",
+    ] + select({
+        # glibc (with _GNU_SOURCE) provides these; the local fallback for
+        # glob_pattern_p would clash with glibc's declaration.
+        "@platforms//os:linux": [
+            "HAVE_GLOB_PATTERN_P",
+            "HAVE_SECURE_GETENV",
+        ],
+        "//conditions:default": [],
+    }),
+    textual_hdrs = ["src/lookup3.c"],
+    deps = [":popt_h"],
+)
+
+alias(
+    name = "libpopt",
+    actual = ":popt",
+)
