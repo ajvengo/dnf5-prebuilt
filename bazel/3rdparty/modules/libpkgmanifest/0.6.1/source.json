@@ -1,0 +1,13 @@
+{
+    "integrity": "sha256-48P9Jlh2BMhf3lBelXAGxdTlWSzRS/ahlJA2nZkVx10=",
+    "overlay": {
+        "BUILD.bazel": "sha256-eEiERDlLGSdHAeG1gcbrdvY8bX8Ne6c6di/Z5wAN9cg=",
+        "MODULE.bazel": "sha256-zRV+D2bwjFJqKcBCyyCi1LzrnhWhbwqSZaMEyD03mU8="
+    },
+    "patch_strip": 1,
+    "patches": {
+        "0001-base_impl-include-stdexcept.patch": "sha256-BDaDN6UnlyMmZRwcvh4YbsDtcMYZf/+vCElUF1sQOSA="
+    },
+    "strip_prefix": "libpkgmanifest-0.6.1",
+    "url": "https://github.com/rpm-software-management/libpkgmanifest/archive/refs/tags/v0.6.1.tar.gz"
+}

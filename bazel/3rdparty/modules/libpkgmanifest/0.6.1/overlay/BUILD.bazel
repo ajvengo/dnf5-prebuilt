@@ -1,0 +1,32 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # LGPL-2.1-or-later
+
+exports_files(["COPYING.LIB"])
+
+# Sources include each other relative to src/ (include_directories(.)).
+cc_library(
+    name = "private_headers",
+    hdrs = glob(["src/**/*.hpp"]),
+    includes = ["src"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "libpkgmanifest",
+    srcs = glob(["src/**/*.cpp"]),
+    hdrs = glob(["include/libpkgmanifest/**/*.hpp"]),
+    copts = [
+        "-std=c++20",
+        "-Wall",
+        "-Wextra",
+    ],
+    implementation_deps = [":private_headers"],
+    includes = ["include"],
+    deps = [
+        "@rpm",
+        "@yaml-cpp",
+    ],
+)

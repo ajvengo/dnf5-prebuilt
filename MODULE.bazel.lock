@@ -298,6 +298,8 @@
     "https://bcr.bazel.build/modules/xz/5.4.5.bcr.8/MODULE.bazel": "e48a69bd54053c2ec5fffc2a29fb70122afd3e83ab6c07068f63bc6553fa57cc",
     "https://bcr.bazel.build/modules/xz/5.4.5.bcr.9/MODULE.bazel": "ff7cf8a5334a96b7b9ffcbe73418d45929ce125efebac39c1ee7d14bd2ae7a9b",
     "https://bcr.bazel.build/modules/xz/5.4.5.bcr.9/source.json": "abf61f3c1630eab7b81722f710060b6f31e7c160511bcbfaad74bb4385883051",
+    "https://bcr.bazel.build/modules/yaml-cpp/0.9.0.bcr.1/MODULE.bazel": "68fd5f98e762becfc3ee701e77a6fe57d51e367b4c59920b5eecade38546eae7",
+    "https://bcr.bazel.build/modules/yaml-cpp/0.9.0.bcr.1/source.json": "1e4c3e1716a29c4e6074d95ffafbb579ad7c762fcb9735788b819e7be98fff6a",
     "https://bcr.bazel.build/modules/zchunk/1.5.4/MODULE.bazel": "9129026c9696f9b4e011e9774dd7905c5d5d1b1b701715b06237aa1674065656",
     "https://bcr.bazel.build/modules/zchunk/1.5.4/source.json": "903dc836bb4055729cf9ea26bb85495ed63dee51de47e0e34ca1f3e3342c5a1a",
     "https://bcr.bazel.build/modules/zlib-ng/2.3.3.bcr.2/MODULE.bazel": "86130924115bf8dfc4aba286fb49a2ec8d32430a21771db9ccf5381acf0d10cc",

@@ -48,3 +48,10 @@ cc_test(
     linkstatic = True,
     deps = ["@libmodulemd//:modulemd"],
 )
+
+cc_test(
+    name = "pkgmanifest_test",
+    srcs = ["pkgmanifest_test.cc"],
+    linkstatic = True,
+    deps = ["@libpkgmanifest"],
+)
