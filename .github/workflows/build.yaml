@@ -5,9 +5,6 @@ name: Build
 on:
   workflow_call:
     secrets:
-      BUILDBUDDY_ENDPOINT:
-        description: BuildBuddy host name (gRPC at grpcs://<host>, invocations at https://<host>/invocation/)
-        required: false
       BUILDBUDDY_API_KEY:
         required: false
 
@@ -17,7 +14,9 @@ jobs:
     # so the platforms share the Bazel server, exec tools and caches.
     runs-on: ubuntu-24.04
     env:
-      BUILDBUDDY_ENDPOINT: ${{ secrets.BUILDBUDDY_ENDPOINT }}
+      # Repository variable: BuildBuddy host name (gRPC at grpcs://<host>,
+      # invocation links at https://<host>/invocation/).
+      BUILDBUDDY_ENDPOINT: ${{ vars.BUILDBUDDY_ENDPOINT }}
       BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
       PLATFORMS: linux_amd64 linux_arm64 osx_amd64 osx_arm64
     steps:
