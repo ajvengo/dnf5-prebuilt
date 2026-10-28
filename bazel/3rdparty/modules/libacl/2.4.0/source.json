@@ -1,0 +1,13 @@
+{
+    "integrity": "sha256-5mETFFbScIoBxhSg9ADhHX0b+utvPnS3W7mAty8BYaM=",
+    "mirror_urls": [
+        "https://download.savannah.gnu.org/releases/acl/acl-2.4.0.tar.xz"
+    ],
+    "overlay": {
+        "BUILD.bazel": "sha256-19u8FRUXr3Zbl/MipwE/3TayRkL2F6540QFfs1K6RlQ=",
+        "MODULE.bazel": "sha256-/DpZ3szA2mXeBKbhHsIztDW+25h5eBSXztxsRLWEje4=",
+        "bazel/config.h": "sha256-i2R5fnu5hXp/ebUUQh+wn9UakJ/fcDmcS1+S6dwUPwk="
+    },
+    "strip_prefix": "acl-2.4.0",
+    "url": "https://download.savannah.nongnu.org/releases/acl/acl-2.4.0.tar.xz"
+}

@@ -1,0 +1,93 @@
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["restricted"])  # LGPL-2.1-or-later
+
+exports_files(["doc/COPYING.LGPL"])
+
+LINUX_ONLY = select({
+    "@platforms//os:linux": [],
+    "//conditions:default": ["@platforms//:incompatible"],
+})
+
+# Public headers, installed upstream as <sys/acl.h> and <acl/libacl.h> after
+# replacing the internal EXPORT visibility macro with `extern`
+# (SUBST_INSTALL_HEADER in include/Makemodule.am).
+expand_template(
+    name = "installed_sys_acl_h",
+    out = "installed/sys/acl.h",
+    substitutions = {"EXPORT ": "extern "},
+    target_compatible_with = LINUX_ONLY,
+    template = "include/acl.h",
+)
+
+expand_template(
+    name = "installed_acl_libacl_h",
+    out = "installed/acl/libacl.h",
+    substitutions = {"EXPORT ": "extern "},
+    target_compatible_with = LINUX_ONLY,
+    template = "include/libacl.h",
+)
+
+cc_library(
+    name = "public_headers",
+    hdrs = [
+        "installed/acl/libacl.h",
+        "installed/sys/acl.h",
+    ],
+    strip_include_prefix = "installed",
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "internal_headers",
+    hdrs = glob([
+        "include/*.h",
+        "libacl/*.h",
+        "libmisc/*.h",
+    ]) + ["bazel/config.h"],
+    includes = [
+        "bazel",
+        "include",
+    ],
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:private"],
+)
+
+# libacl without perm_copy_fd()/perm_copy_file(): those need libattr's
+# <attr/error_context.h>, which is not available here and is unused by dnf5.
+cc_library(
+    name = "acl",
+    srcs = glob(
+        ["libacl/*.c"],
+        exclude = [
+            "libacl/perm_copy_fd.c",
+            "libacl/perm_copy_file.c",
+        ],
+    ) + [
+        "libmisc/fchmodat_compat.c",
+        "libmisc/getxattrat_compat.c",
+        "libmisc/high_water_alloc.c",
+        "libmisc/listxattrat_compat.c",
+        "libmisc/next_line.c",
+        "libmisc/proc-self-fd.c",
+        "libmisc/quote.c",
+        "libmisc/removexattrat_compat.c",
+        "libmisc/setxattrat_compat.c",
+        "libmisc/uid_gid_lookup.c",
+        "libmisc/unquote.c",
+        "libmisc/walk_tree.c",
+        # glibc 2.28 has no *xattrat() functions.
+        "libmisc/xattrat.c",
+    ],
+    implementation_deps = [":internal_headers"],
+    local_defines = [
+        "NDEBUG",
+        'LOCALEDIR=\\"/usr/share/locale\\"',
+    ],
+    target_compatible_with = LINUX_ONLY,
+    deps = [":public_headers"],
+)

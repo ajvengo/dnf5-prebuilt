@@ -8,3 +8,10 @@ cc_test(
     srcs = ["smartcols_test.c"],
     deps = ["@libsmartcols//:smartcols"],
 )
+
+cc_test(
+    name = "acl_test",
+    srcs = ["acl_test.c"],
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = ["@libacl//:acl"],
+)

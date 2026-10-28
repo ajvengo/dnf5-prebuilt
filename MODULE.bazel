@@ -38,4 +38,5 @@ use_repo(buildbuddy, "buildbuddy_toolchain")
 # consumers of the dnf5-prebuilt ruleset download prebuilt binaries instead.
 bazel_dep(name = "toml11", version = "4.4.0", dev_dependency = True)
 bazel_dep(name = "json-c", version = "0.19", dev_dependency = True)
+bazel_dep(name = "libacl", version = "2.4.0", dev_dependency = True)
 bazel_dep(name = "libsmartcols", version = "2.42.4", dev_dependency = True)
