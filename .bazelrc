@@ -19,6 +19,7 @@ common --check_direct_dependencies=error
 # Hermeticity and strict environment
 build --incompatible_strict_action_env
 build --sandbox_default_allow_network=false
+build --incompatible_repo_env_ignores_action_env
 
 # Suppress C/C++ compiler warnings and action output noise
 build --copt=-w
@@ -35,7 +36,6 @@ build --nobuild_runfile_links
 # protocols (file:// repositories).
 build --@curl//:ssl_lib=openssl
 build --@curl//:http_only=false
-build --experimental_remote_cache_chunking
 
 # Bazel RBE configuration profile targeting //bazel:ubuntu24_04_amd64
 # The container image of remote actions can be overridden (e.g. in .bazelrc.user) with
@@ -56,6 +56,11 @@ build:rbe --experimental_profile_include_target_label
 build:rbe --experimental_profile_include_primary_output
 test:rbe --remote_default_exec_properties=dockerNetwork=bridge
 test:rbe --remote_default_exec_properties=network=bridge
+build:rbe --action_env=LC_ALL=C --action_env=LANG=en
+# Tools built for the exec platform (e.g. BCR sed, which loops forever in a
+# UTF-8 locale) run in the exec configuration, which only sees --host_action_env.
+build:rbe --host_action_env=LC_ALL=C
+build:rbe --jobs=40
 
 # Target platform configurations (see //bazel:BUILD.bazel)
 build:linux_amd64 --platforms=//bazel:linux_amd64
@@ -75,6 +80,7 @@ test --sandbox_default_allow_network=true
 build:docker --experimental_enable_docker_sandbox
 build:docker --experimental_docker_image=gcr.io/flame-public/rbe-ubuntu24-04:latest
 build:docker --spawn_strategy=docker
+build:docker --noexperimental_docker_use_customized_images
 
 # CI configuration
 common:ci --color=yes
