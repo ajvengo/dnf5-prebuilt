@@ -30,10 +30,15 @@ git archive --format=tar --prefix="${PREFIX}/" "${TAG}" | tar -x -C "$work"
 
 # Stamp the module version and the integrity of the prebuilt archives.
 sed -i.bak "0,/version = \"0.0.0\"/s//version = \"${VERSION}\"/" "$work/$PREFIX/MODULE.bazel"
-python3 - "$work/$PREFIX/dnf5-prebuilt/private/versions.bzl" "$DNF5_VERSION" "$TAG" "$integrity" <<'PY'
+# The archives are downloaded from the releases of the repository that cuts the release.
+python3 - "$work/$PREFIX/dnf5-prebuilt/private/versions.bzl" "$DNF5_VERSION" "$TAG" "$integrity" \
+    "${GITHUB_REPOSITORY:-bookingcom/dnf5-prebuilt}" <<'PY'
 import re, sys
-path, dnf5_version, tag, integrity = sys.argv[1:]
+path, dnf5_version, tag, integrity, repository = sys.argv[1:]
 src = open(path).read()
+src, n = re.subn(r'"https://github\.com/[^/]+/[^/]+/releases/', '"https://github.com/%s/releases/' % repository, src)
+if n != 1:
+    sys.exit("could not find RELEASE_URL_TEMPLATE in %s" % path)
 entry = '    "%s": {\n        "tag": "%s",\n        "integrity": {\n%s        },\n    },\n' % (
     dnf5_version, tag, integrity.replace("\\n", "\n"))
 new, n = re.subn(r'    "%s": \{\n.*?\n    \},\n' % re.escape(dnf5_version), entry, src, flags=re.DOTALL)

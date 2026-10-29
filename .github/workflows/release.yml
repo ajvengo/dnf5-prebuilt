@@ -64,6 +64,8 @@ jobs:
           fail_on_unmatched_files: true
 
   publish:
+    # Only the upstream repository publishes to the Bazel Central Registry.
+    if: github.repository == 'bookingcom/dnf5-prebuilt'
     needs: release
     uses: ./.github/workflows/publish.yaml
     with:
