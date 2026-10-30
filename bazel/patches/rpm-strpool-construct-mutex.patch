@@ -1,30 +1,24 @@
+Backport of rpm commit c1fe256483b4802af27c2fe67a31443ac4045bd4 (https://github.com/rpm-software-management/rpm/pull/4291).
+
 diff --git a/rpmio/rpmstrpool.cc b/rpmio/rpmstrpool.cc
+index cf7d9d4276..4379be85bb 100644
 --- a/rpmio/rpmstrpool.cc
 +++ b/rpmio/rpmstrpool.cc
-@@ -3,6 +3,7 @@
- #include <shared_mutex>
- #include <mutex>
- #include <atomic>
-+#include <new>
+@@ -237,7 +237,7 @@ static void rpmstrPoolRehash(rpmstrPool pool)
  
- #include <stdio.h>
- #include <stdlib.h>
-@@ -238,6 +239,10 @@
  rpmstrPool rpmstrPoolCreate(void)
  {
-     rpmstrPool pool = (rpmstrPool)xcalloc(1, sizeof(*pool));
-+    /* calloc() does not construct the mutex: all-zero bytes are an unlocked
-+     * mutex with glibc, but not with macOS, whose pthread objects carry a
-+     * signature (pthread_mutex_lock() fails with EINVAL). */
-+    new (&pool->mutex) std::shared_mutex();
+-    rpmstrPool pool = (rpmstrPool)xcalloc(1, sizeof(*pool));
++    rpmstrPool pool = new rpmstrPool_s{};
  
      pool->offs_alloced = STROFFS_CHUNK;
      pool->offs = (const char **)xcalloc(pool->offs_alloced, sizeof(*pool->offs));
-@@ -267,6 +272,7 @@
+@@ -267,7 +267,7 @@ rpmstrPool rpmstrPoolFree(rpmstrPool pool)
  	pool->chunks[i] = _free(pool->chunks[i]);
      }
      free(pool->chunks);
-+    pool->mutex.~shared_mutex();
-     free(pool);
+-    free(pool);
++    delete pool;
  
      return NULL;
+ }
